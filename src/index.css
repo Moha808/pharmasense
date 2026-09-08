@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Custom Properties: Deep Navy Theme ────────────────── */
+:root, html.dark {
+  --color-bg:         #0B1F26;
+  --color-bg-card:    #132D35;
+  --color-bg-alt:     #08181E;
+  --color-bg-input:   #08181E;
+  --color-text:       #F1F5F9;
+  --color-text-muted: #94A3B8;
+  --color-text-light: #64748B;
+  --color-border:     #26434A;
+  --shadow-card:      0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ─── Base Reset ─────────────────────────────────────────────────── */
+@layer base {
+  * { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    transition: background-color 0.25s ease, color 0.25s ease;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* ─── Custom Scrollbars ──────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--color-bg-alt); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-light); }
+
+/* ─── Print Styles (for PDF/Thermal receipts) ───────────────────── */
+@media print {
+  body * { visibility: hidden; }
+  #printable-receipt, #printable-receipt * { visibility: visible; }
+  #printable-receipt {
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 16px;
+    background: #fff;
+    color: #000;
+  }
+}
