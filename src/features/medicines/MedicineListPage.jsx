@@ -125,7 +125,7 @@ export function MedicineListPage() {
               {total} units
             </span>
             <span className="text-[10px] text-txt-muted">
-              {medBatches.length} batch(es) • {isLow ? '⚠️ Low Stock' : '✅ In Stock'}
+              {medBatches.length} batch(es) • {isLow ? 'Low Stock' : 'In Stock'}
             </span>
           </div>
         );

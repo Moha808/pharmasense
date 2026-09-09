@@ -17,7 +17,7 @@ export function Sidebar({ isOpen, onClose }) {
   const handleLogout = async () => { 
     setShowLogoutConfirm(false);
     await logout(); 
-    navigate('/login'); 
+    navigate('/'); 
   };
 
   const adminNav = [

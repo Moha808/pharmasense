@@ -13,57 +13,66 @@ export function BarcodeScannerModal({ isOpen, onClose, onScanSuccess }) {
   const scannerRef = useRef(null);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     let html5QrCode = null;
+    setCameraError(null);
+    setIsScanning(false);
+    const scannerElementId = 'barcode-reader-viewport';
 
-    if (isOpen) {
-      setCameraError(null);
-      const scannerElementId = 'barcode-reader-viewport';
+    const timer = setTimeout(() => {
+      try {
+        html5QrCode = new Html5Qrcode(scannerElementId);
+        scannerRef.current = html5QrCode;
 
-      // Give DOM time to mount modal element
-      const timer = setTimeout(() => {
-        try {
-          html5QrCode = new Html5Qrcode(scannerElementId);
-          scannerRef.current = html5QrCode;
+        const config = {
+          fps: 10,
+          qrbox: { width: 250, height: 150 },
+          aspectRatio: 1.777778,
+        };
 
-          const config = {
-            fps: 10,
-            qrbox: { width: 250, height: 150 },
-            aspectRatio: 1.777778
-          };
-
-          html5QrCode.start(
+        html5QrCode
+          .start(
             { facingMode: 'environment' },
             config,
             (decodedText) => {
-              // On success
               toast.success(`Barcode Scanned: ${decodedText}`);
               onScanSuccess(decodedText);
               onClose();
             },
-            (error) => {
-              // Frame scan error (normal while searching)
-            }
-          ).then(() => {
+            () => {} // per-frame scan error — normal while searching
+          )
+          .then(() => {
             setIsScanning(true);
-          }).catch(err => {
+          })
+          .catch((err) => {
             console.warn('Camera access unavailable:', err);
-            setCameraError('Camera access unavailable or permission denied. Please use manual entry below.');
+            setCameraError(
+              'Camera access unavailable or permission denied. Please use manual entry below.'
+            );
             setIsScanning(false);
           });
-        } catch (e) {
-          setCameraError('Could not initialize camera scanner.');
-        }
-      }, 300);
+      } catch (e) {
+        console.warn('Scanner init error:', e);
+        setCameraError('Could not initialize camera scanner.');
+      }
+    }, 300);
 
-      return () => {
-        clearTimeout(timer);
-        if (scannerRef.current && scannerRef.current.isScanning) {
-          scannerRef.current.stop().then(() => {
-            scannerRef.current.clear();
-          }).catch(e => console.warn('Scanner stop warning:', e));
-        }
-      };
-    }
+    return () => {
+      clearTimeout(timer);
+      const scanner = scannerRef.current;
+      if (scanner) {
+        try {
+          if (scanner.isScanning) {
+            scanner.stop().then(() => scanner.clear()).catch(() => {});
+          } else {
+            scanner.clear && scanner.clear();
+          }
+        } catch (_) {}
+        scannerRef.current = null;
+      }
+      setIsScanning(false);
+    };
   }, [isOpen, onScanSuccess, onClose]);
 
   const handleManualSubmit = (e) => {

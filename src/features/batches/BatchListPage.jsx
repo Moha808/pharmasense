@@ -131,7 +131,7 @@ export function BatchListPage() {
             {days <= 0 ? (
               <span className="text-[10px] text-danger font-black">EXPIRED</span>
             ) : days <= 60 ? (
-              <span className="text-[10px] text-danger font-bold">⚠️ Expires in {days}d</span>
+              <span className="text-[10px] text-danger font-bold">Expires in {days}d</span>
             ) : (
               <span className="text-[10px] text-success font-medium">Valid ({days}d)</span>
             )}

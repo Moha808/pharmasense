@@ -31,7 +31,7 @@ export function Topbar({ onMenuToggle }) {
   const handleLogout = async () => {
     setShowLogoutConfirm(false);
     await logout();
-    navigate('/login');
+    navigate('/');
   };
 
   const criticalBatches = batches.filter(b => {

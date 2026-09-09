@@ -83,7 +83,7 @@ export function AlertsPage() {
           <div>
             <span className="font-semibold block text-txt">{formatDate(b.expiryDate)}</span>
             <span className={`text-[10px] font-bold ${days <= 0 ? 'text-danger' : days <= 30 ? 'text-danger' : 'text-warning'}`}>
-              {days <= 0 ? '⚠️ EXPIRED' : `⏳ ${days} days remaining`}
+              {days <= 0 ? 'EXPIRED' : `${days} days remaining`}
             </span>
           </div>
         );
@@ -133,7 +133,7 @@ export function AlertsPage() {
             {med.currentStock} units
           </span>
           <span className="text-[10px] text-txt-muted">
-            {med.isOut ? '❌ Depleted' : '⚠️ Below Threshold'}
+            {med.isOut ? 'Depleted' : 'Below Threshold'}
           </span>
         </div>
       )

@@ -127,9 +127,6 @@ export function LoginPage() {
           )}
 
           <div className="mt-8 pt-6 border-t border-bdr flex flex-col items-center gap-3">
-            <Link to="/admin" className="inline-flex items-center gap-1.5 text-[11px] font-bold text-txt-muted hover:text-primary transition-colors">
-              <ShieldCheck className="w-3.5 h-3.5" /> Go to Admin Console
-            </Link>
             <div className="text-center text-[10px] text-txt-muted/50">
               PharmaSense Operations System
             </div>

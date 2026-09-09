@@ -32,7 +32,7 @@ export function AdminLoginPage() {
   React.useEffect(() => {
     if (user && user.role !== 'admin') {
       toast.error('You do not have administrative privileges.');
-      logout().then(() => navigate('/login'));
+      logout().then(() => navigate('/'));
     }
   }, [user, navigate, logout]);
 

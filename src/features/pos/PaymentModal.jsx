@@ -138,7 +138,7 @@ export function PaymentModal({
             {/* Change computation box */}
             <div className={`p-3 rounded-xl border flex items-center justify-between text-xs ${isShortfall ? 'bg-danger/10 border-danger/30 text-danger' : 'bg-success/10 border-success/30 text-success'}`}>
               <span className="font-semibold">
-                {isShortfall ? '⚠️ Shortfall Amount:' : '💵 Change Due to Customer:'}
+                {isShortfall ? 'Shortfall Amount:' : 'Change Due to Customer:'}
               </span>
               <span className="text-base font-black">
                 {isShortfall ? formatCurrency(totalAmount - tenderedNum) : formatCurrency(change)}
