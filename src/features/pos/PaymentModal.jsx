@@ -100,8 +100,8 @@ export function PaymentModal({
           <div className="p-4 rounded-xl border border-bdr bg-bg-alt text-center space-y-2 animate-in fade-in zoom-in-95 duration-200">
             <p className="text-xs font-bold text-txt-muted uppercase tracking-wider">Transfer Details</p>
             <div>
-              <p className="text-2xl font-black text-primary tracking-widest">9156151191</p>
-              <p className="text-sm font-bold text-txt mt-1">Opay</p>
+              <p className="text-2xl font-black text-primary tracking-widest">9153703007</p>
+              <p className="text-sm font-bold text-txt mt-1">Opay - Akolo Aku Danjuma</p>
               <p className="text-xs text-txt-muted mt-2 border-t border-bdr pt-2">Please verify transfer success before completing sale.</p>
             </div>
           </div>
