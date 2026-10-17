@@ -23,10 +23,10 @@ export const Input = React.forwardRef(({
           id={inputId}
           type={type}
           className={`
-            block w-full rounded-lg border text-sm transition-all duration-150
+            block w-full border text-sm transition-colors duration-150
             ${LeftIcon ? 'pl-9' : 'pl-3.5'}
             ${RightIcon ? 'pr-9' : 'pr-3.5'}
-            py-2.5
+            py-2
             ${error
               ? 'border-danger focus:border-danger focus:ring-1 focus:ring-danger/30'
               : 'border-bdr focus:border-primary focus:ring-1 focus:ring-primary/20'}

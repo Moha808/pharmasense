@@ -15,8 +15,8 @@ export const Select = React.forwardRef(({
         ref={ref}
         id={selectId}
         className={`
-          block w-full rounded-lg border text-sm transition-all duration-150
-          px-3.5 py-2.5
+          block w-full border text-sm transition-colors duration-150
+          px-3.5 py-2
           ${error
             ? 'border-danger focus:border-danger focus:ring-1 focus:ring-danger/30'
             : 'border-bdr focus:border-primary focus:ring-1 focus:ring-primary/20'}

@@ -44,13 +44,13 @@ export function ConfirmModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="sm" showClose={false}>
-      <div className="flex flex-col items-center text-center gap-4 py-2">
-        <div className={`w-14 h-14 rounded-full flex items-center justify-center ${colorMap[variant]}`}>
+      <div className="flex flex-col items-center text-center gap-3 py-2">
+        <div className={`w-11 h-11 border border-bdr flex items-center justify-center ${colorMap[variant]}`}>
           {iconMap[variant]}
         </div>
         <div>
-          <h3 className="text-base font-bold text-txt mb-1">{title}</h3>
-          {message && <p className="text-sm text-txt-muted leading-relaxed">{message}</p>}
+          <h3 className="text-sm font-semibold text-txt mb-1">{title}</h3>
+          {message && <p className="text-xs text-txt-muted leading-relaxed max-w-sm">{message}</p>}
         </div>
         <div className="flex gap-3 w-full mt-2">
           <Button

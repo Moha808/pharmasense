@@ -67,71 +67,133 @@ export function AdminLoginPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative transition-colors duration-200"
+      className="min-h-screen flex"
       style={{ backgroundColor: 'var(--color-bg)' }}
     >
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center mb-4">
-          <div onClick={() => navigate('/')}
-            className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-white font-black text-2xl shadow-md cursor-pointer hover:shadow-lg transition-all">
-            <ShieldCheck className="w-6 h-6" />
+      {/* Left decorative panel */}
+      <div
+        className="hidden lg:flex lg:w-80 xl:w-96 flex-col justify-between p-10 border-r border-bdr flex-shrink-0"
+        style={{ backgroundColor: 'var(--color-bg-card)' }}
+      >
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 bg-primary flex items-center justify-center text-white">
+            <ShieldCheck className="w-4 h-4" />
           </div>
+          <span className="font-semibold text-sm text-txt">Pharma<span className="text-primary">Sense</span></span>
         </div>
-        <h2 className="text-center text-2xl sm:text-3xl font-black text-txt tracking-tight">
-          Admin <span className="text-primary">Console</span>
-        </h2>
-        <p className="mt-1 text-center text-xs text-txt-muted">
-          {isResetMode ? 'Reset your administrator password' : 'Secure access for pharmacy management'}
-        </p>
+
+        <div>
+          <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-4">Administration</p>
+          <h2 className="text-xl font-semibold text-txt mb-3 leading-snug">
+            Centralized pharmacy governance.
+          </h2>
+          <p className="text-sm text-txt-muted leading-relaxed">
+            Manage catalogue master data, staff accounts, batch auditing, regulatory compliance, and multi-channel reports.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          {['Superuser Access', 'Encrypted Credentials', 'Regulatory Audit Logs'].map(t => (
+            <div key={t} className="flex items-center gap-2 text-xs text-txt-muted">
+              <span className="w-1 h-1 bg-primary" />
+              {t}
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="py-8 px-6 sm:px-10 rounded-2xl border border-bdr shadow-2xl transition-all duration-300 bg-bg-card">
+      {/* Right: Admin login form */}
+      <div className="flex-1 flex flex-col justify-center items-center px-6 py-12">
+        <div className="w-full max-w-sm">
+          <div className="lg:hidden flex items-center gap-2 mb-8">
+            <div className="w-7 h-7 bg-primary flex items-center justify-center text-white">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <span className="font-semibold text-sm text-txt">Pharma<span className="text-primary">Sense</span></span>
+          </div>
 
-          <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
-            <Input label="Admin Email Address" type="email" placeholder="e.g. admin@pharmasense.com"
-              leftIcon={Mail} error={errors.email?.message} {...register('email')} />
+          <div className="mb-7">
+            <h1 className="text-xl font-semibold text-txt mb-1">
+              {isResetMode ? 'Reset Admin Password' : 'Admin Console'}
+            </h1>
+            <p className="text-sm text-txt-muted">
+              {isResetMode
+                ? 'Enter your registered administrator email to receive instructions.'
+                : 'Enter your administrative credentials to manage pharmacy operations.'}
+            </p>
+          </div>
+
+          <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+            <Input
+              label="Admin Email"
+              type="email"
+              placeholder="admin@pharmasense.ng"
+              leftIcon={Mail}
+              error={errors.email?.message}
+              {...register('email')}
+            />
 
             {!isResetMode && (
-              <div className="space-y-1">
-                <Input label="Admin Password" type={showPassword ? 'text' : 'password'} placeholder="••••••••"
+              <div>
+                <Input
+                  label="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
                   leftIcon={Lock}
                   rightIcon={
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="focus:outline-none">
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="focus:outline-none text-txt-muted hover:text-txt transition-colors">
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   }
-                  error={errors.password?.message} {...register('password')} />
-                
-                <div className="flex justify-end">
-                  <button type="button" onClick={() => setIsResetMode(true)} className="text-[11px] font-semibold text-primary hover:text-primary-dark">
+                  error={errors.password?.message}
+                  {...register('password')}
+                />
+                <div className="flex justify-end mt-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsResetMode(true)}
+                    className="text-[11px] text-txt-muted hover:text-primary transition-colors"
+                  >
                     Forgot password?
                   </button>
                 </div>
               </div>
             )}
 
-            <Button type="submit" variant="primary" size="lg" loading={isLoading}
-              className="w-full mt-2 font-bold shadow-md shadow-primary/20" icon={isResetMode ? Send : ArrowRight}>
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              loading={isLoading}
+              className="w-full mt-1"
+              icon={isResetMode ? Send : ArrowRight}
+            >
               {isResetMode ? 'Send Reset Link' : 'Access Console'}
             </Button>
           </form>
 
           {isResetMode && (
             <div className="mt-4 text-center">
-              <button type="button" onClick={() => setIsResetMode(false)} className="inline-flex items-center gap-1 text-[11px] font-semibold text-txt-muted hover:text-txt transition-colors">
-                <ArrowLeft className="w-3 h-3" /> Back to Secure Login
+              <button
+                type="button"
+                onClick={() => setIsResetMode(false)}
+                className="inline-flex items-center gap-1 text-xs text-txt-muted hover:text-txt transition-colors"
+              >
+                <ArrowLeft className="w-3 h-3" /> Back to Console Login
               </button>
             </div>
           )}
 
-          <div className="mt-8 pt-6 border-t border-bdr flex flex-col items-center gap-3">
-            <Link to="/login" className="inline-flex items-center gap-1.5 text-[11px] font-bold text-txt-muted hover:text-primary transition-colors">
+          <div className="mt-8 pt-6 border-t border-bdr flex flex-col items-center gap-2">
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-1.5 text-xs text-txt-muted hover:text-primary transition-colors"
+            >
               <Users className="w-3.5 h-3.5" /> Return to Staff Portal
             </Link>
-            <div className="text-center text-[10px] text-txt-muted/50">
-              PharmaSense Administrative Access
-            </div>
+            <p className="text-[10px] text-txt-light text-center mt-2">
+              PharmaSense Administrative Access &mdash; Confidential
+            </p>
           </div>
         </div>
       </div>

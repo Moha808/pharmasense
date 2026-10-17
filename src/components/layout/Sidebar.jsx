@@ -24,9 +24,9 @@ export function Sidebar({ isOpen, onClose }) {
     {
       title: 'WORKSPACE',
       items: [
-        { label: 'Overview',        path: '/app/dashboard', icon: LayoutDashboard, exact: true },
-        { label: 'Dispensing / POS', path: '/app/pos',      icon: ShoppingCart },
-        { label: 'Sales History',   path: '/app/sales',     icon: Receipt },
+        { label: 'Overview',         path: '/app/dashboard', icon: LayoutDashboard, exact: true },
+        { label: 'Dispensing / POS', path: '/app/pos',       icon: ShoppingCart },
+        { label: 'Sales History',    path: '/app/sales',     icon: Receipt },
       ],
     },
     {
@@ -79,15 +79,17 @@ export function Sidebar({ isOpen, onClose }) {
     <>
       {/* Mobile overlay */}
       {isOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden"
-             style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
-             onClick={onClose} />
+        <div
+          className="fixed inset-0 z-40 lg:hidden"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+          onClick={onClose}
+        />
       )}
 
       {/* Sidebar panel */}
       <aside
         className={`
-          fixed top-0 bottom-0 left-0 z-50 w-60 flex flex-col border-r border-bdr
+          fixed top-0 bottom-0 left-0 z-50 w-56 flex flex-col border-r border-bdr
           transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:z-auto
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
@@ -96,31 +98,32 @@ export function Sidebar({ isOpen, onClose }) {
         {/* Brand */}
         <div className="h-14 px-4 border-b border-bdr flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-              <Activity className="w-4 h-4 text-white" />
+            {/* Square logo mark — no rounded corners */}
+            <div className="w-7 h-7 bg-primary flex items-center justify-center flex-shrink-0">
+              <Activity className="w-3.5 h-3.5 text-white" />
             </div>
             <div>
-              <span className="font-bold text-sm tracking-tight text-txt">
+              <span className="font-semibold text-sm text-txt">
                 Pharma<span className="text-primary">Sense</span>
               </span>
-              <span className="text-[10px] text-txt-light font-medium block leading-none mt-0.5">
+              <span className="text-[9px] text-txt-light font-medium block leading-none mt-0.5 uppercase tracking-wider">
                 {isAdmin ? 'Admin Console' : 'Staff Portal'}
               </span>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded text-txt-light hover:text-txt lg:hidden transition-colors"
+            className="p-1 text-txt-light hover:text-txt lg:hidden transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Nav */}
-        <div className="flex-1 px-2 py-3 overflow-y-auto">
+        <div className="flex-1 px-2 py-4 overflow-y-auto">
           {navSections.map((sec, i) => (
-            <div key={i} className="mb-4">
-              <div className="px-3 mb-1 text-[10px] font-bold tracking-widest text-txt-light uppercase">
+            <div key={i} className="mb-5">
+              <div className="px-3 mb-1.5 text-[9px] font-bold tracking-[0.12em] text-txt-light uppercase">
                 {sec.title}
               </div>
               <div className="space-y-px">
@@ -133,18 +136,19 @@ export function Sidebar({ isOpen, onClose }) {
                       end={item.exact}
                       onClick={() => { if (window.innerWidth < 1024) onClose(); }}
                       className={({ isActive }) => `
-                        relative flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-medium transition-all duration-100
+                        relative flex items-center gap-2.5 px-3 py-2 text-[12.5px] font-medium transition-colors duration-100
                         ${isActive
-                          ? 'text-primary bg-primary/8'
-                          : 'text-txt-muted hover:text-txt hover:bg-white/5'}
+                          ? 'text-primary bg-primary/10'
+                          : 'text-txt-muted hover:text-txt hover:bg-white/4'}
                       `}
                     >
                       {({ isActive }) => (
                         <>
+                          {/* Left border indicator instead of rounded pill */}
                           {isActive && (
-                            <span className="absolute left-0 top-1 bottom-1 w-0.5 rounded-full bg-primary" />
+                            <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-primary" />
                           )}
-                          <Icon className="w-4 h-4 flex-shrink-0" />
+                          <Icon className="w-[14px] h-[14px] flex-shrink-0" />
                           <span>{item.label}</span>
                         </>
                       )}
@@ -157,20 +161,24 @@ export function Sidebar({ isOpen, onClose }) {
         </div>
 
         {/* User footer */}
-        <div className="p-3 border-t border-bdr flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-full bg-primary/15 text-primary font-bold flex items-center justify-center text-[11px] flex-shrink-0">
+        <div className="px-3 py-3 border-t border-bdr flex-shrink-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              {/* User avatar — square, not pill */}
+              <div
+                className="w-6 h-6 bg-primary/20 text-primary font-bold flex items-center justify-center text-[10px] flex-shrink-0"
+                style={{ fontVariantNumeric: 'normal' }}
+              >
                 {getInitials(user?.fullName)}
               </div>
               <div className="min-w-0">
-                <p className="text-[12px] font-semibold text-txt truncate">{user?.fullName || 'User'}</p>
-                <p className="text-[10px] text-txt-light capitalize truncate">{user?.role || 'staff'}</p>
+                <p className="text-[11px] font-semibold text-txt truncate">{user?.fullName || 'User'}</p>
+                <p className="text-[9px] text-txt-light capitalize truncate">{user?.role || 'staff'}</p>
               </div>
             </div>
             <button
               onClick={() => setShowLogoutConfirm(true)}
-              className="p-1.5 text-txt-light hover:text-danger rounded transition-colors flex-shrink-0"
+              className="p-1.5 text-txt-light hover:text-danger transition-colors flex-shrink-0"
               title="Sign out"
             >
               <LogOut className="w-3.5 h-3.5" />

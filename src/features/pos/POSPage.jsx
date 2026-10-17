@@ -191,7 +191,7 @@ export function POSPage() {
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
             <button
               onClick={() => setSelectedCategory('')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${!selectedCategory ? 'bg-primary text-white shadow-xs' : 'border border-bdr text-txt-muted hover:bg-bg-alt'}`}
+              className={`px-2.5 py-1 text-xs font-medium transition-colors whitespace-nowrap ${!selectedCategory ? 'bg-primary text-white' : 'border border-bdr text-txt-muted hover:text-txt hover:border-txt-light'}`}
               style={selectedCategory ? { backgroundColor: 'var(--color-bg-card)' } : {}}
             >
               All Medicines ({medicines.length})
@@ -200,7 +200,7 @@ export function POSPage() {
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${selectedCategory === cat.id ? 'bg-primary text-white shadow-xs' : 'border border-bdr text-txt-muted hover:bg-bg-alt'}`}
+                className={`px-2.5 py-1 text-xs font-medium transition-colors whitespace-nowrap ${selectedCategory === cat.id ? 'bg-primary text-white' : 'border border-bdr text-txt-muted hover:text-txt hover:border-txt-light'}`}
                 style={selectedCategory !== cat.id ? { backgroundColor: 'var(--color-bg-card)' } : {}}
               >
                 {cat.name}
@@ -209,7 +209,7 @@ export function POSPage() {
           </div>
 
           {/* Medicine Selection Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-3 max-h-[55vh] lg:max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-2 max-h-[55vh] lg:max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
             {availableMedicines.map(med => {
               const activeBatches = getFefoBatchesForMedicine(med.id, batches);
               const totalQty = activeBatches.reduce((sum, b) => sum + b.quantityRemaining, 0);
@@ -222,15 +222,15 @@ export function POSPage() {
                   key={med.id}
                   onClick={() => !isOut && handleAddToCart(med)}
                   className={`
-                    p-4 rounded-xl border border-bdr shadow-card transition-all flex flex-col justify-between
-                    ${isOut ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-primary/50'}
+                    p-3.5 border border-bdr transition-colors flex flex-col justify-between
+                    ${isOut ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:border-txt-light hover:bg-white/2'}
                   `}
                   style={{ backgroundColor: 'var(--color-bg-card)' }}
                 >
                   <div>
                     <div className="flex justify-between items-start gap-2">
-                      <h4 className="font-bold text-xs sm:text-sm text-txt line-clamp-1">{med.name}</h4>
-                      <span className="font-black text-xs text-primary flex-shrink-0">
+                      <h4 className="font-semibold text-xs text-txt line-clamp-1">{med.name}</h4>
+                      <span className="font-bold text-xs text-primary flex-shrink-0 tabular-nums">
                         {formatCurrency(price)}
                       </span>
                     </div>
@@ -238,14 +238,14 @@ export function POSPage() {
                   </div>
 
                   <div className="mt-3 pt-2 border-t border-bdr flex items-center justify-between text-[11px]">
-                    <span className={isOut ? 'text-danger font-bold' : totalQty <= med.reorderThreshold ? 'text-warning font-semibold' : 'text-txt-muted'}>
-                      {isOut ? 'Out of Stock' : `${totalQty} available`}
+                    <span className={isOut ? 'text-danger font-medium' : totalQty <= med.reorderThreshold ? 'text-warning font-medium' : 'text-txt-muted'}>
+                      {isOut ? 'Out of Stock' : `${totalQty} in stock`}
                     </span>
 
                     {earliestExpiry && !isOut && (
-                      <span className="text-[10px] text-txt-muted flex items-center gap-1 font-mono">
-                        <Clock className="w-3 h-3 text-primary" />
-                        FEFO: {formatDate(earliestExpiry)}
+                      <span className="text-[10px] text-txt-muted flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-txt-light" />
+                        {formatDate(earliestExpiry)}
                       </span>
                     )}
                   </div>
@@ -296,34 +296,34 @@ export function POSPage() {
                       </div>
 
                       {/* Quantity Controller */}
-                      <div className="flex items-center gap-1.5 p-1 rounded-lg border border-bdr"
+                      <div className="flex items-center gap-1 p-0.5 border border-bdr"
                            style={{ backgroundColor: 'var(--color-bg-alt)' }}>
                         <button
                           type="button"
                           onClick={() => handleUpdateQty(item.medicineId, -1)}
-                          className="w-6 h-6 rounded border border-bdr text-txt flex items-center justify-center text-xs font-bold shadow-xs hover:bg-bg-card"
+                          className="w-5 h-5 border border-bdr text-txt flex items-center justify-center text-xs hover:bg-bg-card transition-colors"
                           style={{ backgroundColor: 'var(--color-bg-card)' }}
                         >
-                          <Minus className="w-3 h-3" />
+                          <Minus className="w-2.5 h-2.5" />
                         </button>
-                        <span className="w-6 text-center font-bold text-xs text-txt">{item.quantity}</span>
+                        <span className="w-5 text-center font-semibold text-xs text-txt tabular-nums">{item.quantity}</span>
                         <button
                           type="button"
                           onClick={() => handleUpdateQty(item.medicineId, 1)}
-                          className="w-6 h-6 rounded border border-bdr text-txt flex items-center justify-center text-xs font-bold shadow-xs hover:bg-bg-card"
+                          className="w-5 h-5 border border-bdr text-txt flex items-center justify-center text-xs hover:bg-bg-card transition-colors"
                           style={{ backgroundColor: 'var(--color-bg-card)' }}
                         >
-                          <Plus className="w-3 h-3" />
+                          <Plus className="w-2.5 h-2.5" />
                         </button>
                       </div>
 
                       <div className="text-right min-w-[70px]">
-                        <span className="font-extrabold text-xs text-txt block">
+                        <span className="font-semibold text-xs text-txt block tabular-nums">
                           {formatCurrency(item.unitPrice * item.quantity)}
                         </span>
                         <button
                           onClick={() => handleRemoveItem(item.medicineId)}
-                          className="text-[10px] text-txt-muted hover:text-danger mt-0.5"
+                          className="text-[10px] text-txt-muted hover:text-danger mt-0.5 transition-colors"
                         >
                           Remove
                         </button>
@@ -335,21 +335,21 @@ export function POSPage() {
                 {/* Subtotal & Checkout Action */}
                 <div className="pt-4 border-t border-bdr space-y-3">
                   <div className="flex justify-between items-baseline">
-                    <span className="text-xs font-bold text-txt-muted uppercase">Grand Total:</span>
-                    <span className="text-2xl font-black text-primary">{formatCurrency(cartSubtotal)}</span>
+                    <span className="text-xs font-semibold text-txt-muted uppercase tracking-wider">Grand Total:</span>
+                    <span className="text-xl font-bold text-primary tabular-nums">{formatCurrency(cartSubtotal)}</span>
                   </div>
 
-                  <div className="p-2.5 rounded-lg border border-bdr text-[11px] text-txt-muted flex items-center gap-2"
+                  <div className="p-2.5 border border-bdr text-[11px] text-txt-muted flex items-center gap-2"
                        style={{ backgroundColor: 'var(--color-bg-alt)' }}>
-                    <ShieldCheck className="w-4 h-4 text-success flex-shrink-0" />
-                    <span>FEFO engine will automatically decrement the soonest-expiring batches.</span>
+                    <ShieldCheck className="w-4 h-4 text-primary flex-shrink-0" />
+                    <span>FEFO engine will automatically decrement soonest-expiring batches.</span>
                   </div>
 
                   <Button
                     variant="primary"
                     size="lg"
                     onClick={() => setPaymentModalOpen(true)}
-                    className="w-full font-black text-sm shadow-md shadow-primary/20"
+                    className="w-full text-sm font-semibold"
                     icon={ArrowRight}
                   >
                     Proceed to Payment ({formatCurrency(cartSubtotal)})

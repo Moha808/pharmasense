@@ -12,10 +12,9 @@ export function Card({
 }) {
   return (
     <div
-      className={`rounded-xl border border-bdr overflow-hidden transition-colors duration-200 ${className}`}
+      className={`border border-bdr overflow-hidden transition-colors duration-200 ${className}`}
       style={{
         backgroundColor: 'var(--color-bg-card)',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03)',
       }}
     >
       {(title || subtitle || action) && (

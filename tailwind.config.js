@@ -9,58 +9,59 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#0D9488', // Medical Teal
-          dark: '#14B8A6',    // Bright Teal for hover (repurposing 'dark' class for hover)
+          DEFAULT: '#0D9488',
+          dark: '#0F8578',   // darker for hover (not brighter — more professional)
           light: '#042f2e',
         },
         secondary: {
-          DEFAULT: '#22D3EE', // Cyan
+          DEFAULT: '#22D3EE',
           dark: '#06b6d4',
           light: '#164e63',
         },
-        // CSS-variable-backed tokens – work in both light and dark
+        // CSS-variable-backed tokens
         bg: {
           DEFAULT: 'var(--color-bg)',
-          card: 'var(--color-bg-card)',
-          alt: 'var(--color-bg-alt)',
-          input: 'var(--color-bg-input)',
+          card:    'var(--color-bg-card)',
+          alt:     'var(--color-bg-alt)',
+          input:   'var(--color-bg-input)',
+          sidebar: 'var(--color-bg-sidebar)',
         },
         txt: {
           DEFAULT: 'var(--color-text)',
-          muted: 'var(--color-text-muted)',
-          light: 'var(--color-text-light)',
+          muted:   'var(--color-text-muted)',
+          light:   'var(--color-text-light)',
         },
         bdr: {
           DEFAULT: 'var(--color-border)',
         },
         danger: {
           DEFAULT: '#EF4444',
-          dark: '#F87171',
-          light: '#7f1d1d',
+          dark:    '#DC2626',
+          light:   '#7f1d1d',
         },
         warning: {
           DEFAULT: '#F59E0B',
-          dark: '#FBBF24',
-          light: '#78350f',
+          dark:    '#D97706',
+          light:   '#78350f',
         },
         success: {
           DEFAULT: '#22C55E',
-          dark: '#4ADE80',
-          light: '#14532d',
+          dark:    '#16A34A',
+          light:   '#14532d',
         },
       },
       fontFamily: {
         sans: ['Inter', 'Segoe UI', 'system-ui', '-apple-system', 'sans-serif'],
       },
       boxShadow: {
-        'card': 'var(--shadow-card)',
-        'card-hover': '0 10px 30px rgba(20, 60, 65, 0.12)',
-        'modal': '0 20px 60px -15px rgba(17, 45, 50, 0.25)',
+        'card':       'var(--shadow-card)',
+        'card-hover': '0 4px 20px rgba(0,0,0,0.25)',
+        'modal':      'var(--shadow-modal)',
       },
       borderRadius: {
-        'xl': '12px',
-        '2xl': '16px',
-      }
+        // Intentionally NOT overriding 'xl' (12px) and '2xl' (16px) —
+        // we'll use 'lg' (8px) as the new standard in components.
+      },
     },
   },
   plugins: [],

@@ -106,12 +106,12 @@ export function AdminDashboard() {
       {/* ── Page Header ──────────────────────────────────────────────────── */}
       <div className="pb-5 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <p className="text-[12px] text-txt-muted mb-1">{dateLabel}</p>
-          <h1 className="text-[26px] font-bold text-txt tracking-tight">
+          <p className="text-[11px] text-txt-muted mb-0.5">{dateLabel}</p>
+          <h1 className="text-xl font-semibold text-txt">
             {greeting}, {user?.fullName?.split(' ')[0] || 'Administrator'}
           </h1>
-          <p className="text-[13px] text-txt-muted mt-0.5">
-            Here is your pharmacy operations overview for today.
+          <p className="text-xs text-txt-muted mt-0.5">
+            Pharmacy operations overview for today.
           </p>
         </div>
         <div className="flex items-center gap-2 mt-1">
@@ -123,18 +123,19 @@ export function AdminDashboard() {
           >
             Add Medicine
           </Button>
-          <button
+          <Button
+            size="sm"
             onClick={() => navigate('/app/pos')}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-yellow-400 text-yellow-950 text-[13px] font-bold hover:bg-yellow-300 transition-colors"
+            icon={ShoppingCart}
+            variant="primary"
           >
-            <ShoppingCart className="w-4 h-4" />
             Launch POS
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* ── KPI Strip ────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-bdr rounded-xl overflow-hidden border border-bdr mb-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-bdr border border-bdr mb-5">
         {[
           {
             label: "Total Revenue",
@@ -197,14 +198,14 @@ export function AdminDashboard() {
 
           {/* Needs Attention Panel */}
           {needsAttention > 0 && (
-            <div className="rounded-xl border border-bdr overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)' }}>
+            <div className="border border-bdr overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)' }}>
               <div className="px-4 py-3 border-b border-bdr flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-warning" />
-                  <h2 className="text-[13px] font-bold text-txt">Needs Attention</h2>
-                  <span className="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-warning/15 text-warning">{needsAttention}</span>
+                  <AlertTriangle className="w-3.5 h-3.5 text-warning" />
+                  <h2 className="text-xs font-semibold text-txt">Needs Attention</h2>
+                  <span className="ml-1 text-[10px] font-bold px-1.5 py-0.5 bg-warning/15 text-warning">{needsAttention}</span>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/app/alerts')}>View all →</Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate('/app/alerts')}>View all</Button>
               </div>
               <div className="divide-y divide-bdr">
                 {critical7.length > 0 && (
@@ -213,15 +214,15 @@ export function AdminDashboard() {
                     className="w-full text-left px-4 py-3 hover:bg-white/3 transition-colors flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="w-2 h-2 rounded-full bg-danger flex-shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-danger flex-shrink-0" />
                       <div>
-                        <p className="text-[13px] font-semibold text-danger">
+                        <p className="text-[12.5px] font-medium text-danger">
                           {critical7.length} batch{critical7.length > 1 ? 'es' : ''} expiring within 7 days
                         </p>
                         <p className="text-[11px] text-txt-muted mt-0.5">Immediate disposal or return action required</p>
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-txt-light flex-shrink-0" />
+                    <ChevronRight className="w-3.5 h-3.5 text-txt-light flex-shrink-0" />
                   </button>
                 )}
                 {warning30.length > 0 && (
@@ -230,15 +231,15 @@ export function AdminDashboard() {
                     className="w-full text-left px-4 py-3 hover:bg-white/3 transition-colors flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="w-2 h-2 rounded-full bg-warning flex-shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-warning flex-shrink-0" />
                       <div>
-                        <p className="text-[13px] font-semibold text-warning">
+                        <p className="text-[12.5px] font-medium text-warning">
                           {warning30.length} batch{warning30.length > 1 ? 'es' : ''} expiring within 30 days
                         </p>
                         <p className="text-[11px] text-txt-muted mt-0.5">Review stock rotation — prioritize in dispensing</p>
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-txt-light flex-shrink-0" />
+                    <ChevronRight className="w-3.5 h-3.5 text-txt-light flex-shrink-0" />
                   </button>
                 )}
                 {lowStockMedicines.slice(0, 3).map(med => (
@@ -248,15 +249,15 @@ export function AdminDashboard() {
                     className="w-full text-left px-4 py-3 hover:bg-white/3 transition-colors flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="w-2 h-2 rounded-full bg-warning flex-shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-warning flex-shrink-0" />
                       <div>
-                        <p className="text-[13px] font-semibold text-txt">{med.name}</p>
+                        <p className="text-[12.5px] font-medium text-txt">{med.name}</p>
                         <p className="text-[11px] text-txt-muted mt-0.5">
                           Below reorder level — threshold: {med.reorderThreshold || 15} units
                         </p>
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-txt-light flex-shrink-0" />
+                    <ChevronRight className="w-3.5 h-3.5 text-txt-light flex-shrink-0" />
                   </button>
                 ))}
                 {lowStockMedicines.length > 3 && (
@@ -264,8 +265,8 @@ export function AdminDashboard() {
                     onClick={() => navigate('/app/alerts')}
                     className="w-full text-left px-4 py-2.5 hover:bg-white/3 transition-colors"
                   >
-                    <p className="text-[12px] text-primary font-medium">
-                      +{lowStockMedicines.length - 3} more medicines below reorder level →
+                    <p className="text-[11px] text-primary font-medium">
+                      +{lowStockMedicines.length - 3} more medicines below reorder level
                     </p>
                   </button>
                 )}
@@ -274,10 +275,10 @@ export function AdminDashboard() {
           )}
 
           {/* Recent Transactions */}
-          <div className="rounded-xl border border-bdr overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)' }}>
+          <div className="border border-bdr overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)' }}>
             <div className="px-4 py-3 border-b border-bdr flex items-center justify-between">
               <div>
-                <h2 className="text-[13px] font-bold text-txt">Recent Transactions</h2>
+                <h2 className="text-xs font-semibold text-txt">Recent Transactions</h2>
                 <p className="text-[11px] text-txt-muted mt-0.5">Latest point-of-sale activity</p>
               </div>
               <Button variant="ghost" size="sm" onClick={() => navigate('/app/sales')} icon={ArrowRight}>
@@ -298,44 +299,44 @@ export function AdminDashboard() {
         {/* Right column: Revenue chart + Inventory summary */}
         <div className="space-y-5">
           {/* 7-Day Revenue Chart */}
-          <div className="rounded-xl border border-bdr overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)' }}>
+          <div className="border border-bdr overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)' }}>
             <div className="px-4 py-3 border-b border-bdr">
-              <h2 className="text-[13px] font-bold text-txt">Revenue — 7 Days</h2>
+              <h2 className="text-xs font-semibold text-txt">Revenue — 7 Days</h2>
               <p className="text-[11px] text-txt-muted mt-0.5">Daily sales in Nigerian Naira</p>
             </div>
             <div className="p-4">
               <div className="h-44">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} margin={{ top: 0, right: 0, left: -28, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#26434A" vertical={false} />
-                    <XAxis dataKey="name" stroke="#94A3B8" fontSize={10} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#94A3B8" fontSize={10} tickLine={false} axisLine={false} tickFormatter={v => v > 0 ? `₦${(v/1000).toFixed(0)}k` : '0'} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1E3840" vertical={false} />
+                    <XAxis dataKey="name" stroke="#526373" fontSize={10} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#526373" fontSize={10} tickLine={false} axisLine={false} tickFormatter={v => v > 0 ? `₦${(v/1000).toFixed(0)}k` : '0'} />
                     <Tooltip
                       formatter={v => [formatCurrency(v), 'Revenue']}
                       contentStyle={{
-                        backgroundColor: '#132D35',
-                        border: '1px solid #26434A',
-                        borderRadius: '8px',
-                        color: '#F1F5F9',
+                        backgroundColor: '#111F26',
+                        border: '1px solid #1E3840',
+                        borderRadius: '0',
+                        color: '#E8EEF2',
                         fontSize: '12px',
                       }}
-                      cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+                      cursor={{ fill: 'rgba(255,255,255,0.03)' }}
                     />
-                    <Bar dataKey="revenue" fill="#0D9488" radius={[3, 3, 0, 0]} maxBarSize={32} />
+                    <Bar dataKey="revenue" fill="#0D9488" radius={[2, 2, 0, 0]} maxBarSize={28} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
               <div className="mt-3 pt-3 border-t border-bdr flex justify-between items-center">
                 <span className="text-[11px] text-txt-muted">All-time revenue</span>
-                <span className="text-[13px] font-bold text-txt">{formatCurrency(totalRevenue)}</span>
+                <span className="text-sm font-semibold text-txt tabular-nums">{formatCurrency(totalRevenue)}</span>
               </div>
             </div>
           </div>
 
           {/* Inventory Summary */}
-          <div className="rounded-xl border border-bdr overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)' }}>
+          <div className="border border-bdr overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)' }}>
             <div className="px-4 py-3 border-b border-bdr">
-              <h2 className="text-[13px] font-bold text-txt">Inventory Summary</h2>
+              <h2 className="text-xs font-semibold text-txt">Inventory Summary</h2>
             </div>
             <div className="divide-y divide-bdr">
               {[
@@ -351,43 +352,43 @@ export function AdminDashboard() {
                     className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/3 transition-colors"
                   >
                     <div className="flex items-center gap-2.5">
-                      <Icon className="w-3.5 h-3.5 text-txt-muted" />
+                      <Icon className="w-3.5 h-3.5 text-txt-light" />
                       <span className="text-[12px] text-txt-muted">{row.label}</span>
                     </div>
-                    <span className={`text-[13px] font-bold ${row.warn ? 'text-warning' : 'text-txt'}`}>{row.value}</span>
+                    <span className={`text-[12px] font-semibold tabular-nums ${row.warn ? 'text-warning' : 'text-txt'}`}>{row.value}</span>
                   </button>
                 );
               })}
             </div>
-            <div className="px-4 py-3 border-t border-bdr">
+            <div className="px-4 py-2.5 border-t border-bdr">
               <button
                 onClick={() => navigate('/app/batches')}
-                className="text-[12px] text-primary font-medium hover:underline"
+                className="text-[11px] text-primary hover:underline font-medium"
               >
-                Manage batches & stock →
+                Manage batches & stock
               </button>
             </div>
           </div>
 
-          {/* Quick links */}
-          <div className="rounded-xl border border-bdr overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)' }}>
+          {/* Quick Actions */}
+          <div className="border border-bdr overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)' }}>
             <div className="px-4 py-3 border-b border-bdr">
-              <h2 className="text-[13px] font-bold text-txt">Quick Actions</h2>
+              <h2 className="text-xs font-semibold text-txt">Quick Actions</h2>
             </div>
             <div className="p-3 grid grid-cols-2 gap-2">
               {[
-                { label: 'Receive stock', sub: 'Batch stock-in', path: '/app/batches', color: '#0D9488' },
-                { label: 'Add supplier', sub: 'Supplier profile', path: '/app/suppliers', color: '#22D3EE' },
-                { label: 'View reports', sub: 'Sales analytics', path: '/app/reports', color: '#a78bfa' },
-                { label: 'Audit trail', sub: 'System log', path: '/app/audit-log', color: '#94A3B8' },
+                { label: 'Receive stock',  sub: 'Batch stock-in',   path: '/app/batches' },
+                { label: 'Add supplier',   sub: 'Supplier profile',  path: '/app/suppliers' },
+                { label: 'View reports',   sub: 'Sales analytics',   path: '/app/reports' },
+                { label: 'Audit trail',    sub: 'System log',        path: '/app/audit-log' },
               ].map((item, i) => (
                 <button
                   key={i}
                   onClick={() => navigate(item.path)}
-                  className="text-left p-3 rounded-lg border border-bdr hover:border-primary/30 hover:bg-primary/5 transition-all"
+                  className="text-left p-3 border border-bdr hover:border-txt-light hover:bg-white/3 transition-all"
                   style={{ backgroundColor: 'var(--color-bg-alt)' }}
                 >
-                  <p className="text-[12px] font-semibold text-txt">{item.label}</p>
+                  <p className="text-[11.5px] font-medium text-txt">{item.label}</p>
                   <p className="text-[10px] text-txt-muted mt-0.5">{item.sub}</p>
                 </button>
               ))}

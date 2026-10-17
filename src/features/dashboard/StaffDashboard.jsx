@@ -80,7 +80,7 @@ export function StaffDashboard() {
       render: s => (
         <button
           onClick={() => handlePrintReceipt(s)}
-          className="p-1.5 rounded text-txt-muted hover:text-primary hover:bg-primary/10 transition-colors"
+          className="p-1.5 text-txt-muted hover:text-primary transition-colors"
           title="Print receipt"
         >
           <Printer className="w-3.5 h-3.5" />
@@ -94,64 +94,68 @@ export function StaffDashboard() {
       {/* ── Compact Header ─────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <p className="text-[12px] text-txt-muted mb-1">{dateLabel} · {shiftLabel}</p>
-          <h1 className="text-[26px] font-bold text-txt tracking-tight">
+          <p className="text-[11px] text-txt-muted mb-0.5">{dateLabel} &middot; {shiftLabel}</p>
+          <h1 className="text-xl font-semibold text-txt">
             {greeting}, {user?.fullName?.split(' ')[0] || 'Pharmacist'}
           </h1>
+          <p className="text-xs text-txt-muted mt-0.5">
+            Shift overview and dispensing console.
+          </p>
         </div>
-        <button
+        <Button
+          size="sm"
           onClick={() => navigate('/app/pos')}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-yellow-400 text-yellow-950 text-[13px] font-bold hover:bg-yellow-300 transition-colors self-start mt-1"
+          icon={ShoppingCart}
+          variant="primary"
         >
-          <ShoppingCart className="w-4 h-4" />
           New Dispensing
-        </button>
+        </Button>
       </div>
 
       {/* ── Alert Strip (conditional) ───────────────────────────────────── */}
       {(criticalBatches.length > 0 || lowStockCount > 0) && (
         <button
           onClick={() => navigate('/app/alerts')}
-          className="w-full text-left px-4 py-3 rounded-lg border border-warning/30 bg-warning/8 flex items-center justify-between gap-3 hover:bg-warning/12 transition-colors"
+          className="w-full text-left px-4 py-2.5 border border-warning/30 bg-warning/8 flex items-center justify-between gap-3 hover:bg-warning/12 transition-colors"
         >
           <div className="flex items-center gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0" />
+            <AlertTriangle className="w-3.5 h-3.5 text-warning flex-shrink-0" />
             <div className="flex flex-wrap gap-x-4 gap-y-0.5">
               {criticalBatches.length > 0 && (
-                <span className="text-[12px] font-semibold text-warning">
+                <span className="text-[12px] font-medium text-warning">
                   {criticalBatches.length} batch{criticalBatches.length > 1 ? 'es' : ''} expiring within 7 days
                 </span>
               )}
               {lowStockCount > 0 && (
-                <span className="text-[12px] font-semibold text-warning">
+                <span className="text-[12px] font-medium text-warning">
                   {lowStockCount} medicine{lowStockCount > 1 ? 's' : ''} below reorder level
                 </span>
               )}
             </div>
           </div>
-          <span className="text-[12px] text-txt-muted flex-shrink-0">View alerts →</span>
+          <span className="text-[11px] text-txt-muted flex-shrink-0">View alerts &rarr;</span>
         </button>
       )}
 
       {/* ── Dispensing Workspace ────────────────────────────────────────── */}
-      <div className="rounded-xl border border-bdr overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)' }}>
+      <div className="border border-bdr overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)' }}>
         <div className="px-4 py-3 border-b border-bdr">
-          <h2 className="text-[13px] font-bold text-txt">Dispensing Workspace</h2>
+          <h2 className="text-xs font-semibold text-txt">Dispensing Workspace</h2>
           <p className="text-[11px] text-txt-muted mt-0.5">FEFO batch allocation is active — earliest expiry dispensed first</p>
         </div>
         <div className="p-4">
           <div className="flex gap-2">
             <button
               onClick={() => navigate('/app/pos')}
-              className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg border border-bdr text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+              className="flex-1 flex items-center gap-3 px-3.5 py-2.5 border border-bdr text-left transition-colors hover:border-txt-light hover:bg-white/3"
               style={{ backgroundColor: 'var(--color-bg-alt)' }}
             >
               <Search className="w-4 h-4 text-txt-muted flex-shrink-0" />
-              <span className="text-[13px] text-txt-muted">Search medicine, barcode or batch number...</span>
+              <span className="text-xs text-txt-muted">Search medicine, barcode or batch number...</span>
             </button>
             <button
               onClick={() => navigate('/app/pos')}
-              className="flex items-center gap-2 px-4 py-3 rounded-lg border border-primary/30 bg-primary/10 text-primary text-[12px] font-semibold hover:bg-primary/15 transition-colors flex-shrink-0"
+              className="flex items-center gap-2 px-3.5 py-2.5 border border-primary/30 bg-primary/10 text-primary text-xs font-medium hover:bg-primary/15 transition-colors flex-shrink-0"
             >
               <ScanBarcode className="w-4 h-4" />
               <span className="hidden sm:inline">Scan Barcode</span>
@@ -162,7 +166,7 @@ export function StaffDashboard() {
               <button
                 key={name}
                 onClick={() => navigate('/app/pos')}
-                className="px-3 py-1 rounded-full border border-bdr text-[11px] text-txt-muted hover:text-primary hover:border-primary/40 transition-colors"
+                className="px-2.5 py-1 border border-bdr text-[11px] text-txt-muted hover:text-txt hover:border-txt-light transition-colors"
                 style={{ backgroundColor: 'var(--color-bg-alt)' }}
               >
                 {name}
@@ -170,17 +174,17 @@ export function StaffDashboard() {
             ))}
             <button
               onClick={() => navigate('/app/medicines')}
-              className="px-3 py-1 rounded-full border border-bdr text-[11px] text-txt-muted hover:text-txt transition-colors"
+              className="px-2.5 py-1 border border-bdr text-[11px] text-primary hover:underline transition-colors"
               style={{ backgroundColor: 'var(--color-bg-alt)' }}
             >
-              Browse all →
+              Browse all &rarr;
             </button>
           </div>
         </div>
       </div>
 
       {/* ── Shift Stats Strip ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-px bg-bdr rounded-xl overflow-hidden border border-bdr">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-bdr border border-bdr">
         {[
           { label: "My Total Revenue", value: formatCurrency(myTotalRevenue), sub: `Today: ${formatCurrency(myTodayRevenue)}`, icon: Receipt },
           { label: "Today's Transactions", value: myTodaySales.length, sub: 'Orders completed today', icon: ShoppingCart },
@@ -190,21 +194,21 @@ export function StaffDashboard() {
           return (
             <div key={i} className="bg-bg-card p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Icon className="w-3.5 h-3.5 text-txt-muted" />
-                <span className="text-[11px] text-txt-muted font-medium">{stat.label}</span>
+                <Icon className="w-3.5 h-3.5 text-txt-light" />
+                <span className="text-[11px] text-txt-muted uppercase tracking-wider">{stat.label}</span>
               </div>
-              <p className="text-[20px] font-bold text-txt">{stat.value}</p>
-              <p className="text-[10px] text-txt-muted mt-1">{stat.sub}</p>
+              <p className="text-xl font-bold text-txt tabular-nums">{stat.value}</p>
+              <p className="text-[11px] text-txt-muted mt-1">{stat.sub}</p>
             </div>
           );
         })}
       </div>
 
       {/* ── Recent Dispensing Activity ──────────────────────────────────── */}
-      <div className="rounded-xl border border-bdr overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)' }}>
+      <div className="border border-bdr overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)' }}>
         <div className="px-4 py-3 border-b border-bdr flex items-center justify-between">
           <div>
-            <h2 className="text-[13px] font-bold text-txt">My Dispensing Activity</h2>
+            <h2 className="text-xs font-semibold text-txt">My Dispensing Activity</h2>
             <p className="text-[11px] text-txt-muted mt-0.5">Your sales records for this shift</p>
           </div>
           <Button variant="ghost" size="sm" onClick={() => navigate('/app/sales')} icon={ArrowRight}>
