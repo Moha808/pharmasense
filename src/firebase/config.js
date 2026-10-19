@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 
 export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -25,17 +25,7 @@ try {
   if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('your_api_key')) {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
-    
-    // Enable offline persistence with multi-tab support
-    try {
-      db = initializeFirestore(app, {
-        localCache: persistentLocalCache({
-          tabManager: persistentMultipleTabManager()
-        })
-      });
-    } catch (e) {
-      console.warn('Firestore offline persistence warning:', e);
-    }
+    db = getFirestore(app);
   }
 } catch (error) {
   console.warn('Firebase initialization note (operating in demo-mode until real credentials provided):', error);

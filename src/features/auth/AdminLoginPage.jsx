@@ -26,11 +26,18 @@ export function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isResetMode, setIsResetMode] = useState(false);
+  // Tracks whether we are in the middle of a login/logout flow so the
+  // useEffect below does not fire a redirect while onSubmit is running.
+  const isSubmittingRef = React.useRef(false);
   const from = location.state?.from?.pathname || '/app/dashboard';
 
-  // If a staff member tries to access the admin portal while logged in, log them out or redirect
+  // Only redirect if a user with a confirmed non-admin role is already present
+  // AND we are not currently in the middle of a login/logout flow.
+  // This prevents the stale-session redirect from firing when an admin navigates
+  // to this page and the previous staff session is still in localStorage.
   React.useEffect(() => {
-    if (user && user.role !== 'admin') {
+    if (isSubmittingRef.current) return;
+    if (user && typeof user.role === 'string' && user.role !== 'admin') {
       toast.error('You do not have administrative privileges.');
       logout().then(() => navigate('/'));
     }
@@ -43,6 +50,7 @@ export function AdminLoginPage() {
 
   const onSubmit = async (data) => {
     setIsLoading(true);
+    isSubmittingRef.current = true;
     try {
       if (isResetMode) {
         await sendPasswordReset(data.email);
@@ -62,6 +70,7 @@ export function AdminLoginPage() {
       toast.error(err.message || 'Authentication failed. Please verify credentials.');
     } finally {
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 

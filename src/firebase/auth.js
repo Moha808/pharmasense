@@ -4,7 +4,8 @@ import {
   onAuthStateChanged as firebaseOnAuthChanged,
   sendPasswordResetEmail as firebaseSendPasswordResetEmail
 } from 'firebase/auth';
-import { auth, isFirebaseConfigured } from './config';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db, isFirebaseConfigured } from './config';
 import { fetchCollection } from './firestore';
 
 const DEMO_USER_KEY = 'pharmasense_auth_user';
@@ -18,34 +19,60 @@ export async function loginWithEmail(email, password) {
 
   try {
     const userCredential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
-    const user = userCredential.user;
+    const firebaseUser = userCredential.user;
     
-    // Fetch user role from users collection
-    const users = await fetchCollection('users');
-    const profile = users.find(u => u.email?.toLowerCase() === normalizedEmail || u.uid === user.uid);
+    let profile = null;
+
+    // Strategy 1: direct document lookup by uid (most reliable — standard Firebase pattern)
+    if (db) {
+      try {
+        const docSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
+        if (docSnap.exists()) {
+          profile = { id: docSnap.id, ...docSnap.data() };
+        }
+      } catch (e) {
+        console.warn('Direct uid lookup failed, falling back to collection scan:', e);
+      }
+    }
+
+    // Strategy 2: scan the users collection and match by email or uid
+    if (!profile) {
+      const users = await fetchCollection('users');
+      profile = users.find(
+        u => u.email?.toLowerCase() === normalizedEmail || u.uid === firebaseUser.uid
+      ) || null;
+    }
+
+    if (!profile) {
+      // No Firestore profile found — sign out and give a clear message
+      await firebaseSignOut(auth);
+      throw new Error(
+        'No user profile found in the system. Please contact the administrator to set up your account.'
+      );
+    }
     
-    if (profile?.status === 'suspended') {
+    if (profile.status === 'suspended') {
       await firebaseSignOut(auth);
       throw new Error('Your account is currently suspended. Please contact the administrator.');
     }
 
-    if (profile?.status === 'pending') {
+    if (profile.status === 'pending') {
       await firebaseSignOut(auth);
       throw new Error('Your account is pending Admin approval.');
     }
 
-    if (profile?.status === 'rejected') {
+    if (profile.status === 'rejected') {
       await firebaseSignOut(auth);
       throw new Error('Your account registration was rejected.');
     }
     
     const sessionUser = {
-      uid: user.uid,
-      email: user.email,
-      fullName: profile?.fullName || user.displayName || 'Pharmacy User',
-      role: profile?.role || 'staff',
-      status: profile?.status || 'active',
-      phone: profile?.phone || ''
+      uid: firebaseUser.uid,
+      email: firebaseUser.email,
+      fullName: profile.fullName || firebaseUser.displayName || 'Pharmacy User',
+      role: profile.role || 'staff',
+      status: profile.status || 'active',
+      phone: profile.phone || ''
     };
     
     localStorage.setItem(DEMO_USER_KEY, JSON.stringify(sessionUser));
