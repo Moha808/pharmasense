@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import {
   LayoutDashboard, ShoppingCart, Receipt, Pill, Layers,
   Truck, Users, BellRing, BarChart3, ShieldAlert, Settings,
-  LogOut, X, Activity, CloudUpload,
+  LogOut, X, Activity,
 } from 'lucide-react';
 import { getInitials } from '../../utils/formatters';
 import { ConfirmModal } from '../common/ConfirmModal';
@@ -50,7 +50,6 @@ export function Sidebar({ isOpen, onClose }) {
         { label: 'Reports',          path: '/app/reports',    icon: BarChart3 },
         { label: 'Audit Trail',      path: '/app/audit-log',  icon: ShieldAlert },
         { label: 'Settings',         path: '/app/settings',   icon: Settings },
-        { label: 'Cloud Sync',       path: '/app/data-sync',  icon: CloudUpload },
       ],
     },
   ];
