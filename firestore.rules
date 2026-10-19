@@ -39,10 +39,14 @@ service cloud.firestore {
     // ==========================================
     // USERS COLLECTION
     // Admin has full CRUD. Staff can read own doc.
+    // Self-registration allowed (user creates their own doc during sign-up).
     // ==========================================
     match /users/{userId} {
+      // Admin can read all users; authenticated users can read their own doc
       allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
-      allow create: if isAdmin();
+      // Admin can create any user; authenticated user can create their own doc (self-registration)
+      allow create: if isAdmin() || (isAuthenticated() && isOwner(userId));
+      // Admin can update any field; staff can only update their own phone number
       allow update: if isAdmin() || (isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['phone']));
       allow delete: if false; // Soft-delete only
     }

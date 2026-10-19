@@ -139,7 +139,8 @@ export async function fetchCollection(colName) {
     try {
       const q = query(collection(db, colName));
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // Spread data first, then id — ensures Firestore doc ID always wins
+      return snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
     } catch (err) {
       console.warn(`Firestore read failed for ${colName}, falling back to local:`, err);
       return getLocalData(colName);
@@ -154,7 +155,7 @@ export async function fetchDocument(colName, docId) {
       const docRef = doc(db, colName, docId);
       const snapshot = await getDoc(docRef);
       if (snapshot.exists()) {
-        return { id: snapshot.id, ...snapshot.data() };
+        return { ...snapshot.data(), id: snapshot.id };
       }
       return null;
     } catch (err) {
@@ -221,18 +222,13 @@ export async function updateDocument(colName, docId, updates, actorId = 'system'
   };
 
   if (isFirebaseConfigured && db) {
-    try {
-      const docRef = doc(db, colName, docId);
-      await updateDoc(docRef, {
-        ...updates,
-        updatedAt: serverTimestamp()
-      });
-    } catch (err) {
-      console.warn(`Firestore update failed for ${colName}/${docId}, updating locally:`, err);
-      const items = getLocalData(colName);
-      const next = items.map(it => (it.id === docId || it.uid === docId ? updatedItem : it));
-      setLocalData(colName, next);
-    }
+    // In Firebase mode: write to Firestore only — do NOT fall back to localStorage.
+    // If this throws (e.g. permission denied), the error surfaces to the UI.
+    const docRef = doc(db, colName, docId);
+    await updateDoc(docRef, {
+      ...updates,
+      updatedAt: serverTimestamp()
+    });
   } else {
     const items = getLocalData(colName);
     const next = items.map(it => (it.id === docId || it.uid === docId ? updatedItem : it));
@@ -264,7 +260,8 @@ export function subscribeToCollection(colName, callback) {
     try {
       const q = query(collection(db, colName));
       const unsubscribe = firestoreOnSnapshot(q, (snapshot) => {
-        const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Spread data first, then id — ensures Firestore doc ID always wins
+        const data = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
         callback(data);
       }, (error) => {
         console.warn(`Real-time subscription error for ${colName}, using local fallback:`, error);
