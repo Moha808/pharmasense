@@ -28,6 +28,7 @@ import { AlertsPage } from '../features/alerts/AlertsPage';
 import { ReportsPage } from '../features/reports/ReportsPage';
 import { AuditLogPage } from '../features/auditLog/AuditLogPage';
 import { SettingsPage } from '../features/settings/SettingsPage';
+import { DataMigrationPage } from '../features/settings/DataMigrationPage';
 
 export const router = createBrowserRouter([
   {
@@ -135,6 +136,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredRole="admin">
             <SettingsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'data-sync',
+        element: (
+          <ProtectedRoute requiredRole="admin">
+            <DataMigrationPage />
           </ProtectedRoute>
         ),
       },
