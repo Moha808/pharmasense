@@ -42,44 +42,36 @@ service cloud.firestore {
     // Self-registration allowed (user creates their own doc during sign-up).
     // ==========================================
     match /users/{userId} {
-      // Admin can read all users; authenticated users can read their own doc
       allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
-      // Admin can create any user; authenticated user can create their own doc (self-registration)
       allow create: if isAdmin() || (isAuthenticated() && isOwner(userId));
-      // Admin can update any field; staff can only update their own phone number
       allow update: if isAdmin() || (isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['phone']));
-      allow delete: if false; // Soft-delete only
+      allow delete: if false;
     }
 
     // ==========================================
     // CATEGORIES COLLECTION
-    // Read: authenticated users. Write: Admin only.
     // ==========================================
     match /categories/{categoryId} {
       allow read: if isAuthenticated();
       allow create, update: if isAdmin();
-      allow delete: if false; // Soft-delete only
+      allow delete: if false;
     }
 
     // ==========================================
     // MEDICINES COLLECTION
-    // Read: authenticated users. Write: Admin only.
     // ==========================================
     match /medicines/{medicineId} {
       allow read: if isAuthenticated();
       allow create, update: if isAdmin();
-      allow delete: if false; // Soft-delete only
+      allow delete: if false;
     }
 
     // ==========================================
     // BATCHES COLLECTION
-    // Read: authenticated users.
-    // Write: Admin only (stock-in, adjustment) or transactional sale deduction.
     // ==========================================
     match /batches/{batchId} {
       allow read: if isAuthenticated();
       allow create: if isAdmin();
-      // Allow update if admin OR if staff during a sale decreasing quantityRemaining
       allow update: if isAdmin() || (
         isAdminOrStaff() && 
         request.resource.data.quantityRemaining <= resource.data.quantityRemaining
@@ -89,7 +81,6 @@ service cloud.firestore {
 
     // ==========================================
     // SUPPLIERS COLLECTION
-    // Admin full access. Staff no access.
     // ==========================================
     match /suppliers/{supplierId} {
       allow read, write: if isAdmin();
@@ -97,38 +88,34 @@ service cloud.firestore {
 
     // ==========================================
     // STOCK MOVEMENTS COLLECTION
-    // Admin can read all. Staff and admin can write during inventory changes/sales.
     // ==========================================
     match /stockMovements/{movementId} {
       allow read: if isAdmin();
       allow create: if isAdminOrStaff();
-      allow update, delete: if false; // Immutable audit log
+      allow update, delete: if false;
     }
 
     // ==========================================
     // SALES COLLECTION
-    // Admin can read all. Staff can create sale and read own sales.
     // ==========================================
     match /sales/{saleId} {
       allow read: if isAdmin() || (isStaff() && resource.data.cashierId == request.auth.uid);
       allow create: if isAdminOrStaff() && request.resource.data.cashierId == request.auth.uid;
-      allow update: if isAdmin(); // Admin only for returns/adjustments
+      allow update: if isAdmin();
       allow delete: if false;
     }
 
     // ==========================================
     // AUDIT LOGS COLLECTION
-    // Admin read only. Server/authenticated create (append-only).
     // ==========================================
     match /auditLogs/{logId} {
       allow read: if isAdmin();
       allow create: if isAuthenticated();
-      allow update, delete: if false; // Strictly immutable
+      allow update, delete: if false;
     }
 
     // ==========================================
     // SETTINGS COLLECTION
-    // Read: Admin or Staff. Write: Admin only.
     // ==========================================
     match /settings/{docId} {
       allow read: if isAuthenticated();

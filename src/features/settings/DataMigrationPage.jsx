@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import { db, isFirebaseConfigured } from '../../firebase/config';
-import { collection, doc, setDoc, writeBatch } from 'firebase/firestore';
+import { collection, doc, setDoc, writeBatch, getDoc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/common/Button';
-import { CloudUpload, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
+import { CloudUpload, CheckCircle, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const STORAGE_PREFIX = 'pharmasense_db_';
+// Write users FIRST so the admin doc exists before other collections are written
 const COLLECTIONS = [
+  'users',
   'categories',
   'suppliers',
   'medicines',
   'batches',
-  'users',
   'sales',
   'stockMovements',
   'auditLogs',
@@ -29,7 +32,8 @@ function readLocalCollection(name) {
 }
 
 export function DataMigrationPage() {
-  const [status, setStatus] = useState('idle'); // idle | running | done | error
+  const { user: currentUser } = useAuth();
+  const [status, setStatus] = useState('idle');
   const [log, setLog] = useState([]);
   const [summary, setSummary] = useState(null);
 
@@ -39,7 +43,15 @@ export function DataMigrationPage() {
 
   const handleMigrate = async () => {
     if (!isFirebaseConfigured || !db) {
-      toast.error('Firebase is not configured on this environment. Run migration on the Vercel deployment instead.');
+      toast.error('Firebase is not configured. Run this on localhost with Firebase credentials.');
+      return;
+    }
+
+    const firebaseAuth = getAuth();
+    const firebaseUser = firebaseAuth.currentUser;
+
+    if (!firebaseUser) {
+      toast.error('You must be logged in to migrate data.');
       return;
     }
 
@@ -47,6 +59,44 @@ export function DataMigrationPage() {
     setLog([]);
     setSummary(null);
 
+    // ── Step 1: Ensure the admin's own Firestore document exists ──────────
+    // Without this, isAdmin() in security rules returns false and all writes fail.
+    appendLog('Ensuring admin profile exists in Firestore...', 'info');
+    try {
+      const adminDocRef = doc(db, 'users', firebaseUser.uid);
+      const adminSnap = await getDoc(adminDocRef);
+      if (!adminSnap.exists()) {
+        await setDoc(adminDocRef, {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email || currentUser?.email || '',
+          fullName: currentUser?.fullName || 'Administrator',
+          role: 'admin',
+          status: 'active',
+          phone: currentUser?.phone || '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          id: firebaseUser.uid,
+        });
+        appendLog('Admin profile created in Firestore.', 'success');
+      } else {
+        // Ensure role is admin on the existing doc
+        const existing = adminSnap.data();
+        if (existing.role !== 'admin') {
+          await setDoc(adminDocRef, { ...existing, role: 'admin', status: 'active' });
+          appendLog('Admin profile role updated to "admin".', 'success');
+        } else {
+          appendLog('Admin profile already exists — OK.', 'success');
+        }
+      }
+    } catch (err) {
+      appendLog(`Failed to create admin profile: ${err.message}`, 'error');
+      appendLog('Migration aborted. Check Firestore security rules.', 'error');
+      setStatus('error');
+      setSummary({ totalDocs: 0, totalCollections: 0, errors: [{ colName: 'users (admin)', err: err.message }] });
+      return;
+    }
+
+    // ── Step 2: Migrate all localStorage collections ───────────────────────
     let totalDocs = 0;
     let totalCollections = 0;
     const errors = [];
@@ -61,7 +111,6 @@ export function DataMigrationPage() {
 
       appendLog(`${colName}: uploading ${items.length} document(s)...`, 'info');
 
-      // Firestore writeBatch supports max 500 ops per batch
       const BATCH_SIZE = 400;
       let uploaded = 0;
 
@@ -71,13 +120,12 @@ export function DataMigrationPage() {
           const batch = writeBatch(db);
 
           chunk.forEach(item => {
-            // Use item.id or item.uid as document ID, fallback to auto
             const docId = item.id || item.uid || null;
             const ref = docId
               ? doc(db, colName, String(docId))
               : doc(collection(db, colName));
 
-            // Clean up undefined values — Firestore rejects them
+            // Remove undefined values — Firestore rejects them
             const clean = JSON.parse(JSON.stringify(item));
             batch.set(ref, clean, { merge: true });
           });
@@ -101,7 +149,7 @@ export function DataMigrationPage() {
     if (errors.length === 0) {
       toast.success(`Migration complete — ${totalDocs} documents synced to Firestore`);
     } else {
-      toast.error(`Migration finished with ${errors.length} error(s). Check the log below.`);
+      toast.error(`Migration finished with ${errors.length} error(s)`);
     }
   };
 
@@ -109,10 +157,9 @@ export function DataMigrationPage() {
     <div className="space-y-6 max-w-3xl">
       <PageHeader
         title="Cloud Data Migration"
-        subtitle="Sync your local browser data to Firebase Firestore for production use"
+        subtitle="Sync your local browser data to Firebase Firestore"
       />
 
-      {/* Warning notice */}
       <div
         className="border border-amber-500/40 p-4 text-sm"
         style={{ backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 90%, #f59e0b 10%)' }}
@@ -120,14 +167,10 @@ export function DataMigrationPage() {
         <div className="flex items-start gap-3">
           <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
           <div className="space-y-1 text-txt-muted">
-            <p className="font-semibold text-txt">Run this tool on localhost only.</p>
+            <p className="font-semibold text-txt">Run on localhost only.</p>
             <p>
-              This tool reads all data stored in your browser's localStorage and uploads it to
-              Firebase Firestore. Run it from <code className="text-primary">localhost:5173</code> where
-              your local data exists. The Vercel deployment will then reflect the synced data.
-            </p>
-            <p className="mt-2">
-              Documents are merged (not replaced), so existing Firestore data is preserved.
+              Reads all data from your browser's localStorage and uploads it to Firebase Firestore.
+              Run from <code className="text-primary">localhost:5173</code>. Documents are merged — existing Firestore data is preserved.
             </p>
           </div>
         </div>
@@ -137,7 +180,9 @@ export function DataMigrationPage() {
       <div className="border border-bdr" style={{ backgroundColor: 'var(--color-bg-card)' }}>
         <div className="px-5 py-4 border-b border-bdr">
           <p className="text-sm font-semibold text-txt">Collections to migrate</p>
-          <p className="text-xs text-txt-muted mt-0.5">Reads from localStorage key prefix <code className="text-primary">pharmasense_db_</code></p>
+          <p className="text-xs text-txt-muted mt-0.5">
+            Prefix: <code className="text-primary">pharmasense_db_</code>
+          </p>
         </div>
         <div className="divide-y divide-bdr">
           {COLLECTIONS.map(name => {
@@ -154,7 +199,6 @@ export function DataMigrationPage() {
         </div>
       </div>
 
-      {/* Action */}
       <div className="flex items-center gap-4">
         <Button
           variant="primary"
@@ -164,12 +208,12 @@ export function DataMigrationPage() {
           onClick={handleMigrate}
           disabled={status === 'running'}
         >
-          {status === 'running' ? 'Uploading to Firestore...' : 'Migrate Local Data to Firestore'}
+          {status === 'running' ? 'Uploading...' : 'Migrate Local Data to Firestore'}
         </Button>
 
         {status === 'done' && (
           <span className="flex items-center gap-1.5 text-sm text-green-400">
-            <CheckCircle className="w-4 h-4" /> Migration complete
+            <CheckCircle className="w-4 h-4" /> Complete
           </span>
         )}
         {status === 'error' && (
@@ -179,7 +223,6 @@ export function DataMigrationPage() {
         )}
       </div>
 
-      {/* Log output */}
       {log.length > 0 && (
         <div className="border border-bdr" style={{ backgroundColor: 'var(--color-bg-card)' }}>
           <div className="px-5 py-3 border-b border-bdr">
@@ -190,13 +233,10 @@ export function DataMigrationPage() {
               <div
                 key={i}
                 className={
-                  entry.type === 'success'
-                    ? 'text-green-400'
-                    : entry.type === 'error'
-                    ? 'text-red-400'
-                    : entry.type === 'skip'
-                    ? 'text-txt-muted'
-                    : 'text-txt'
+                  entry.type === 'success' ? 'text-green-400'
+                  : entry.type === 'error' ? 'text-red-400'
+                  : entry.type === 'skip' ? 'text-txt-muted'
+                  : 'text-txt'
                 }
               >
                 {entry.msg}
@@ -206,12 +246,11 @@ export function DataMigrationPage() {
         </div>
       )}
 
-      {/* Summary */}
       {summary && (
         <div className="border border-bdr p-5 text-sm" style={{ backgroundColor: 'var(--color-bg-card)' }}>
           <p className="font-semibold text-txt mb-2">Summary</p>
           <p className="text-txt-muted">
-            {summary.totalDocs} document(s) across {summary.totalCollections} collection(s) uploaded to Firestore.
+            {summary.totalDocs} document(s) across {summary.totalCollections} collection(s) uploaded.
           </p>
           {summary.errors.length > 0 && (
             <ul className="mt-2 space-y-1 text-red-400">
