@@ -19,9 +19,19 @@ export const posService = {
     for (const item of cartItems) {
       const fefoResult = calculateFefoAllocations(item.medicineId, item.quantity, allBatches);
       
-      if (!fefoResult.isSufficient) {
+      // If all batches for this medicine are expired, block with an explicit safety warning
+      if (fefoResult.allExpired) {
         throw new Error(
-          `Insufficient stock for "${item.medicineName}". Available in FEFO queue: ${fefoResult.totalAvailable}, Requested: ${item.quantity}`
+          `Dispensing Blocked: All available inventory (${fefoResult.totalExpired} units) for "${item.medicineName}" has EXPIRED. The system strictly prohibits selling expired stock.`
+        );
+      }
+
+      if (!fefoResult.isSufficient) {
+        const expiredNotice = fefoResult.totalExpired > 0
+          ? ` (${fefoResult.totalExpired} expired units quarantined and blocked)`
+          : '';
+        throw new Error(
+          `Insufficient non-expired stock for "${item.medicineName}". Available valid stock: ${fefoResult.totalAvailable} units${expiredNotice}, Requested: ${item.quantity} units.`
         );
       }
 

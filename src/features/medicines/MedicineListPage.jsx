@@ -22,6 +22,7 @@ import {
   Barcode 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getMedicineBatchStatus } from '../../utils/fefo';
 
 export function MedicineListPage() {
   const { isAdmin, user } = useAuth();
@@ -115,18 +116,36 @@ export function MedicineListPage() {
     {
       header: 'Total Stock',
       render: (med) => {
-        const medBatches = batches.filter(b => b.medicineId === med.id && b.status === 'active');
-        const total = medBatches.reduce((acc, b) => acc + b.quantityRemaining, 0);
-        const isLow = total <= (med.reorderThreshold || 15);
+        const status = getMedicineBatchStatus(med.id, batches);
+        const threshold = med.reorderThreshold || 15;
+        const isLow = status.totalValidStock <= threshold;
+
+        if (status.allBatchesExpired) {
+          return (
+            <div>
+              <span className="font-black text-sm block text-danger">
+                0 valid units
+              </span>
+              <span className="text-[10px] text-danger font-bold">
+                {status.totalExpiredStock} units EXPIRED (Blocked)
+              </span>
+            </div>
+          );
+        }
 
         return (
           <div>
             <span className={`font-black text-sm block ${isLow ? 'text-warning' : 'text-txt'}`}>
-              {total} units
+              {status.totalValidStock} units
             </span>
-            <span className="text-[10px] text-txt-muted">
-              {medBatches.length} batch(es) • {isLow ? 'Low Stock' : 'In Stock'}
+            <span className="text-[10px] text-txt-muted block">
+              {status.validBatches.length} valid batch{status.validBatches.length !== 1 ? 'es' : ''} • {status.totalValidStock === 0 ? 'Out of Stock' : isLow ? 'Low Stock' : 'In Stock'}
             </span>
+            {status.hasExpiredBatches && (
+              <span className="text-[9.5px] text-danger font-semibold block">
+                • {status.totalExpiredStock} expired quarantined
+              </span>
+            )}
           </div>
         );
       }

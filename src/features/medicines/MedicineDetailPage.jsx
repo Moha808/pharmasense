@@ -22,6 +22,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { formatCurrency, formatDate, getDaysUntilExpiry } from '../../utils/formatters';
+import { isBatchExpired } from '../../utils/fefo';
 
 export function MedicineDetailPage() {
   const { id } = useParams();
@@ -39,7 +40,10 @@ export function MedicineDetailPage() {
   const category = categories.find(c => c.id === medicine?.categoryId);
   const medBatches = batches.filter(b => b.medicineId === id && b.status !== 'deleted');
 
-  const totalStock = medBatches.filter(b => b.status === 'active').reduce((acc, b) => acc + b.quantityRemaining, 0);
+  const validBatches = medBatches.filter(b => b.status === 'active' && !isBatchExpired(b.expiryDate));
+  const expiredBatches = medBatches.filter(b => isBatchExpired(b.expiryDate) && Number(b.quantityRemaining) > 0);
+  const totalStock = validBatches.reduce((acc, b) => acc + (Number(b.quantityRemaining) || 0), 0);
+  const totalExpiredStock = expiredBatches.reduce((acc, b) => acc + (Number(b.quantityRemaining) || 0), 0);
   const isLowStock = totalStock <= (medicine?.reorderThreshold || 15);
 
   if (!medicine) {
@@ -77,13 +81,18 @@ export function MedicineDetailPage() {
     {
       header: 'Expiry Date',
       render: (b) => {
+        const expired = isBatchExpired(b.expiryDate);
         const days = getDaysUntilExpiry(b.expiryDate);
         return (
           <div>
-            <span className="block font-medium">{formatDate(b.expiryDate)}</span>
-            {days <= 60 && days >= 0 && (
+            <span className={`block font-medium ${expired ? 'text-danger font-bold' : ''}`}>
+              {formatDate(b.expiryDate)}
+            </span>
+            {expired ? (
+              <span className="text-[10px] text-danger font-black">EXPIRED</span>
+            ) : days <= 60 && days >= 0 ? (
               <span className="text-[10px] text-danger font-bold">Expires in {days}d (FEFO Active)</span>
-            )}
+            ) : null}
           </div>
         );
       }
@@ -96,14 +105,20 @@ export function MedicineDetailPage() {
     {
       header: 'Status',
       align: 'center',
-      render: (b) => (
-        <Badge 
-          variant={b.quantityRemaining === 0 ? 'neutral' : b.status === 'active' ? 'success' : 'danger'}
-          size="sm"
-        >
-          {b.quantityRemaining === 0 ? 'Depleted' : b.status}
-        </Badge>
-      )
+      render: (b) => {
+        const expired = isBatchExpired(b.expiryDate) && Number(b.quantityRemaining) > 0;
+        if (expired) {
+          return <Badge variant="danger" size="sm" dot>EXPIRED</Badge>;
+        }
+        return (
+          <Badge 
+            variant={b.quantityRemaining === 0 ? 'neutral' : b.status === 'active' ? 'success' : 'danger'}
+            size="sm"
+          >
+            {b.quantityRemaining === 0 ? 'Depleted' : b.status}
+          </Badge>
+        );
+      }
     }
   ];
 
@@ -113,9 +128,16 @@ export function MedicineDetailPage() {
         title={medicine.name}
         subtitle={`${medicine.genericName} • ${medicine.brand}`}
         badge={
-          <Badge variant={isLowStock ? 'warning' : 'success'} size="md">
-            {isLowStock ? 'Low Stock' : 'Stocked'} ({totalStock} units available)
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant={totalStock === 0 ? 'danger' : isLowStock ? 'warning' : 'success'} size="md">
+              {totalStock === 0 ? 'Out of Stock' : isLowStock ? 'Low Stock' : 'Stocked'} ({totalStock} valid units)
+            </Badge>
+            {totalExpiredStock > 0 && (
+              <Badge variant="danger" size="md" dot>
+                {totalExpiredStock} units EXPIRED
+              </Badge>
+            )}
+          </div>
         }
         actions={
           <div className="flex gap-2">

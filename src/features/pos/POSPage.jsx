@@ -23,7 +23,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { formatCurrency, formatDate, getDaysUntilExpiry } from '../../utils/formatters';
-import { getFefoBatchesForMedicine } from '../../utils/fefo';
+import { getFefoBatchesForMedicine, getMedicineBatchStatus, isBatchExpired } from '../../utils/fefo';
 import toast from 'react-hot-toast';
 
 export function POSPage() {
@@ -55,12 +55,19 @@ export function POSPage() {
     return matchesSearch && matchesCategory;
   });
 
-  // Add item to cart with FEFO check
+  // Add item to cart with FEFO check & strict expiry prevention
   const handleAddToCart = (medicine) => {
-    const activeBatches = getFefoBatchesForMedicine(medicine.id, batches);
-    const totalAvailable = activeBatches.reduce((sum, b) => sum + b.quantityRemaining, 0);
+    const status = getMedicineBatchStatus(medicine.id, batches);
 
-    if (totalAvailable <= 0) {
+    if (status.allBatchesExpired) {
+      toast.error(
+        `Cannot dispense "${medicine.name}": All available inventory (${status.totalExpiredStock} units) has EXPIRED. Dispensing expired stock is strictly prevented.`,
+        { duration: 5000 }
+      );
+      return;
+    }
+
+    if (status.totalValidStock <= 0) {
       toast.error(`"${medicine.name}" is currently out of stock.`);
       return;
     }
@@ -68,12 +75,16 @@ export function POSPage() {
     const existingIndex = cart.findIndex(it => it.medicineId === medicine.id);
     const currentCartQty = existingIndex > -1 ? cart[existingIndex].quantity : 0;
 
-    if (currentCartQty + 1 > totalAvailable) {
-      toast.error(`Cannot add more. Only ${totalAvailable} units available in active inventory.`);
+    if (currentCartQty + 1 > status.totalValidStock) {
+      const expiredNote = status.hasExpiredBatches
+        ? ` (${status.totalExpiredStock} expired units quarantined)`
+        : '';
+      toast.error(`Cannot add more. Only ${status.totalValidStock} valid unexpired units available${expiredNote}.`);
       return;
     }
 
-    const defaultSellingPrice = activeBatches[0]?.sellingPrice || 1000;
+    const nextBatch = status.nextValidBatch;
+    const defaultSellingPrice = Number(nextBatch?.sellingPrice) || Number(medicine.unitPrice) || 1000;
 
     if (existingIndex > -1) {
       const updated = [...cart];
@@ -87,8 +98,9 @@ export function POSPage() {
         barcode: medicine.barcode,
         unitPrice: defaultSellingPrice,
         quantity: 1,
-        earliestExpiry: activeBatches[0]?.expiryDate,
-        totalAvailable
+        earliestExpiry: nextBatch?.expiryDate,
+        batchNumber: nextBatch?.batchNumber,
+        totalAvailable: status.totalValidStock
       }]);
     }
   };
@@ -211,25 +223,36 @@ export function POSPage() {
           {/* Medicine Selection Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-2 max-h-[55vh] lg:max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
             {availableMedicines.map(med => {
-              const activeBatches = getFefoBatchesForMedicine(med.id, batches);
-              const totalQty = activeBatches.reduce((sum, b) => sum + b.quantityRemaining, 0);
-              const isOut = totalQty <= 0;
-              const price = activeBatches[0]?.sellingPrice || 1000;
-              const earliestExpiry = activeBatches[0]?.expiryDate;
+              const status = getMedicineBatchStatus(med.id, batches);
+              const isAllExpired = status.allBatchesExpired;
+              const isOut = status.totalValidStock <= 0 && !isAllExpired;
+              const price = status.nextValidBatch?.sellingPrice || med.unitPrice || 1000;
+              const nextExpiry = status.nextValidBatch?.expiryDate;
 
               return (
                 <div
                   key={med.id}
-                  onClick={() => !isOut && handleAddToCart(med)}
+                  onClick={() => handleAddToCart(med)}
                   className={`
-                    p-3.5 border border-bdr transition-colors flex flex-col justify-between
-                    ${isOut ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:border-txt-light hover:bg-white/2'}
+                    p-3.5 border transition-all flex flex-col justify-between
+                    ${isAllExpired 
+                      ? 'border-danger/50 bg-danger/5 cursor-pointer hover:border-danger hover:bg-danger/10' 
+                      : isOut 
+                      ? 'border-bdr opacity-40 cursor-not-allowed' 
+                      : 'border-bdr cursor-pointer hover:border-txt-light hover:bg-white/2'}
                   `}
-                  style={{ backgroundColor: 'var(--color-bg-card)' }}
+                  style={{ backgroundColor: isAllExpired ? undefined : 'var(--color-bg-card)' }}
                 >
                   <div>
                     <div className="flex justify-between items-start gap-2">
-                      <h4 className="font-semibold text-xs text-txt line-clamp-1">{med.name}</h4>
+                      <div className="min-w-0">
+                        <h4 className="font-semibold text-xs text-txt line-clamp-1">{med.name}</h4>
+                        {isAllExpired && (
+                          <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold text-danger bg-danger/10 border border-danger/30 rounded mt-0.5 tracking-wider uppercase">
+                            EXPIRED
+                          </span>
+                        )}
+                      </div>
                       <span className="font-bold text-xs text-primary flex-shrink-0 tabular-nums">
                         {formatCurrency(price)}
                       </span>
@@ -237,15 +260,27 @@ export function POSPage() {
                     <p className="text-[11px] text-txt-muted mt-0.5 line-clamp-1">{med.genericName}</p>
                   </div>
 
-                  <div className="mt-3 pt-2 border-t border-bdr flex items-center justify-between text-[11px]">
-                    <span className={isOut ? 'text-danger font-medium' : totalQty <= med.reorderThreshold ? 'text-warning font-medium' : 'text-txt-muted'}>
-                      {isOut ? 'Out of Stock' : `${totalQty} in stock`}
-                    </span>
+                  <div className="mt-3 pt-2 border-t border-bdr flex flex-col gap-1 text-[11px]">
+                    <div className="flex items-center justify-between">
+                      <span className={isAllExpired ? 'text-danger font-bold' : isOut ? 'text-danger font-medium' : status.totalValidStock <= (med.reorderThreshold || 15) ? 'text-warning font-medium' : 'text-txt-muted'}>
+                        {isAllExpired 
+                          ? `${status.totalExpiredStock} units expired (Blocked)`
+                          : isOut 
+                          ? 'Out of Stock' 
+                          : `${status.totalValidStock} in stock`}
+                      </span>
 
-                    {earliestExpiry && !isOut && (
-                      <span className="text-[10px] text-txt-muted flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-txt-light" />
-                        {formatDate(earliestExpiry)}
+                      {nextExpiry && !isAllExpired && !isOut && (
+                        <span className="text-[10px] text-txt-muted flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-txt-light" />
+                          {formatDate(nextExpiry)}
+                        </span>
+                      )}
+                    </div>
+
+                    {status.hasExpiredBatches && !isAllExpired && (
+                      <span className="text-[9.5px] text-warning/90 font-medium">
+                        • {status.totalExpiredStock} expired unit(s) quarantined
                       </span>
                     )}
                   </div>

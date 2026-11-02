@@ -14,6 +14,7 @@ import {
   runTransaction as firestoreRunTransaction
 } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from './config';
+import { isBatchExpired } from '../utils/fefo';
 import { 
   initialCategories, 
   initialSuppliers, 
@@ -321,6 +322,14 @@ export async function executeAtomicSale({ saleData, fefoAllocations, cashierId, 
         // 2. Perform checks and queue updates
         for (const { doc: bDoc, alloc, ref } of batchDocs) {
           const batchData = bDoc.data();
+
+          // Strict Expiry Check: Block transaction if batch has expired
+          if (isBatchExpired(batchData.expiryDate)) {
+            throw new Error(
+              `Dispensing Blocked: Batch ${batchData.batchNumber} has expired (${batchData.expiryDate}). Expired medicines cannot be sold.`
+            );
+          }
+
           if (batchData.quantityRemaining < alloc.quantityToDeduct) {
             throw new Error(`Insufficient stock in batch ${batchData.batchNumber}. Available: ${batchData.quantityRemaining}, Requested: ${alloc.quantityToDeduct}`);
           }
@@ -390,6 +399,14 @@ export async function executeAtomicSale({ saleData, fefoAllocations, cashierId, 
     }
 
     const batch = updatedBatches[batchIndex];
+
+    // Strict Expiry Check: Block transaction if batch has expired
+    if (isBatchExpired(batch.expiryDate)) {
+      throw new Error(
+        `Dispensing Blocked: Batch ${batch.batchNumber} has expired (${batch.expiryDate}). Expired medicines cannot be sold.`
+      );
+    }
+
     if (batch.quantityRemaining < alloc.quantityToDeduct) {
       throw new Error(`Insufficient stock in batch ${batch.batchNumber}. Available: ${batch.quantityRemaining}, Requested: ${alloc.quantityToDeduct}`);
     }

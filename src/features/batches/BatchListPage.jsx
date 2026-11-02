@@ -19,6 +19,8 @@ import {
   History, 
 } from 'lucide-react';
 import { formatCurrency, formatDate, getDaysUntilExpiry } from '../../utils/formatters';
+import { isBatchExpired } from '../../utils/fefo';
+import { AlertOctagon, ShieldAlert } from 'lucide-react';
 
 export function BatchListPage() {
   const { isAdmin } = useAuth();
@@ -36,6 +38,10 @@ export function BatchListPage() {
   const [adjustModalOpen, setAdjustModalOpen] = useState(false);
   const [selectedBatchForAdjustment, setSelectedBatchForAdjustment] = useState(null);
 
+  // Compute expired batches count
+  const expiredBatchesList = batches.filter(b => isBatchExpired(b.expiryDate) && Number(b.quantityRemaining) > 0);
+  const totalExpiredUnits = expiredBatchesList.reduce((sum, b) => sum + (Number(b.quantityRemaining) || 0), 0);
+
   // Filter batches and sort by expiry date ASC (FEFO)
   const filteredBatches = batches
     .filter(b => {
@@ -46,7 +52,15 @@ export function BatchListPage() {
         med?.genericName?.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesMed = !selectedMedicine || b.medicineId === selectedMedicine;
-      const matchesStatus = !statusFilter || b.status === statusFilter;
+      
+      const isExpired = isBatchExpired(b.expiryDate) && Number(b.quantityRemaining) > 0;
+      const isDepleted = Number(b.quantityRemaining) === 0 || b.status === 'depleted';
+      const isValidActive = !isExpired && !isDepleted;
+
+      let matchesStatus = true;
+      if (statusFilter === 'active') matchesStatus = isValidActive;
+      else if (statusFilter === 'expired') matchesStatus = isExpired;
+      else if (statusFilter === 'depleted') matchesStatus = isDepleted;
 
       return matchesSearch && matchesMed && matchesStatus;
     })
@@ -124,12 +138,18 @@ export function BatchListPage() {
     {
       header: 'Expiry Date (FEFO)',
       render: (b) => {
+        const expired = isBatchExpired(b.expiryDate);
         const days = getDaysUntilExpiry(b.expiryDate);
         return (
           <div>
-            <span className="font-semibold block text-txt">{formatDate(b.expiryDate)}</span>
-            {days <= 0 ? (
-              <span className="text-[10px] text-danger font-black">EXPIRED</span>
+            <span className={`font-semibold block ${expired ? 'text-danger' : 'text-txt'}`}>
+              {formatDate(b.expiryDate)}
+            </span>
+            {expired ? (
+              <span className="text-[10px] text-danger font-black flex items-center gap-1">
+                <AlertOctagon className="w-3 h-3" />
+                EXPIRED {days < 0 ? `(${Math.abs(days)}d ago)` : ''}
+              </span>
             ) : days <= 60 ? (
               <span className="text-[10px] text-danger font-bold">Expires in {days}d</span>
             ) : (
@@ -137,6 +157,31 @@ export function BatchListPage() {
             )}
           </div>
         );
+      }
+    },
+    {
+      header: 'Safety Status',
+      align: 'center',
+      render: (b) => {
+        const expired = isBatchExpired(b.expiryDate) && Number(b.quantityRemaining) > 0;
+        const depleted = Number(b.quantityRemaining) === 0 || b.status === 'depleted';
+
+        if (expired) {
+          return (
+            <div className="flex flex-col items-center gap-0.5">
+              <Badge variant="danger" size="sm" dot>
+                EXPIRED
+              </Badge>
+              <span className="text-[9px] text-danger/80 font-medium">Sales Blocked</span>
+            </div>
+          );
+        }
+
+        if (depleted) {
+          return <Badge variant="neutral" size="sm">Depleted</Badge>;
+        }
+
+        return <Badge variant="success" size="sm" dot>Active (Valid)</Badge>;
       }
     },
     ...(isAdmin ? [{
@@ -186,6 +231,31 @@ export function BatchListPage() {
 
       {activeTab === 'inventory' ? (
         <div className="space-y-4">
+          {/* Quarantine Warning Banner for Expired Stock */}
+          {expiredBatchesList.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border border-danger/40 bg-danger/5 rounded-xl text-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-danger/10 text-danger flex items-center justify-center flex-shrink-0">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-danger text-sm">
+                    Quarantine Notice: {expiredBatchesList.length} Expired Batch{expiredBatchesList.length > 1 ? 'es' : ''} ({totalExpiredUnits} Units Total)
+                  </h4>
+                  <p className="text-txt-muted mt-0.5">
+                    These batches have passed their expiry date and are automatically blocked from being sold at POS. They remain recorded for audit compliance and disposal.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setStatusFilter(statusFilter === 'expired' ? '' : 'expired')}
+                className="px-3 py-1.5 rounded-lg bg-danger/10 hover:bg-danger/20 text-danger font-bold text-xs whitespace-nowrap transition-colors border border-danger/30"
+              >
+                {statusFilter === 'expired' ? 'Show All Batches' : 'Filter Expired Only'}
+              </button>
+            </div>
+          )}
+
           {/* Filters */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl border border-bdr shadow-card"
                style={{ backgroundColor: 'var(--color-bg-card)' }}>
