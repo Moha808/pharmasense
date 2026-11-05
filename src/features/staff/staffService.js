@@ -1,4 +1,4 @@
-import { fetchCollection, insertDocument, updateDocument } from '../../firebase/firestore';
+import { fetchCollection, insertDocument, updateDocument, softDeleteDocument } from '../../firebase/firestore';
 import { initializeApp, deleteApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { firebaseConfig } from '../../firebase/config';
@@ -55,5 +55,9 @@ export const staffService = {
 
   async updateStatus(uid, status, actorId) {
     return updateDocument('users', uid, { status }, actorId);
+  },
+
+  async deleteStaffUser(uid, actorId) {
+    return softDeleteDocument('users', uid, actorId);
   }
 };

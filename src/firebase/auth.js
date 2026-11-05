@@ -65,6 +65,11 @@ export async function loginWithEmail(email, password) {
       await firebaseSignOut(auth);
       throw new Error('Your account registration was rejected.');
     }
+
+    if (profile.status === 'deleted') {
+      await firebaseSignOut(auth);
+      throw new Error('This account has been deleted by an administrator.');
+    }
     
     const sessionUser = {
       uid: firebaseUser.uid,

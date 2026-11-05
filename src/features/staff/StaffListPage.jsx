@@ -9,7 +9,7 @@ import { SearchInput } from '../../components/common/SearchInput';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { StaffFormModal } from './StaffFormModal';
 import { staffService } from './staffService';
-import { Plus, Edit2, UserCheck, UserX, Users, Check, X } from 'lucide-react';
+import { Plus, Edit2, UserCheck, UserX, Users, Check, X, Trash2 } from 'lucide-react';
 import { formatDate, getInitials } from '../../utils/formatters';
 import toast from 'react-hot-toast';
 
@@ -42,18 +42,23 @@ export function StaffListPage() {
     if (!user || !action) return;
 
     if (user.uid === currentUser?.uid && action !== 'activate') {
-      toast.error('You cannot change the status of your own session.');
+      toast.error('You cannot change the status or delete your own session.');
       closeConfirm();
       return;
     }
 
     setConfirmLoading(true);
     try {
-      await staffService.updateStatus(user.uid || user.id, action, currentUser?.uid);
-      const labelMap = { active: 'activated', suspended: 'suspended', rejected: 'rejected' };
-      toast.success(`Account for ${user.fullName} has been ${labelMap[action] || action}.`);
+      if (action === 'delete') {
+        await staffService.deleteStaffUser(user.uid || user.id, currentUser?.uid);
+        toast.success(`Account for ${user.fullName} has been deleted.`);
+      } else {
+        await staffService.updateStatus(user.uid || user.id, action, currentUser?.uid);
+        const labelMap = { active: 'activated', suspended: 'suspended', rejected: 'rejected' };
+        toast.success(`Account for ${user.fullName} has been ${labelMap[action] || action}.`);
+      }
     } catch {
-      toast.error('Failed to update account status. Please try again.');
+      toast.error(action === 'delete' ? 'Failed to delete account. Please try again.' : 'Failed to update account status. Please try again.');
     } finally {
       setConfirmLoading(false);
       closeConfirm();
@@ -80,6 +85,12 @@ export function StaffListPage() {
         title: 'Reject Registration',
         message: `Reject the registration request from ${user.fullName}? The record will remain marked as rejected.`,
         confirmLabel: 'Reject Request',
+        variant: 'danger',
+      },
+      delete: {
+        title: 'Delete Staff Account',
+        message: `Are you sure you want to permanently delete the account for ${user.fullName} (${user.email})? They will no longer have access to the system.`,
+        confirmLabel: 'Delete Account',
         variant: 'danger',
       },
     };
@@ -160,6 +171,15 @@ export function StaffListPage() {
               >
                 <X className="w-3.5 h-3.5" /> Reject
               </button>
+              {u.uid !== currentUser?.uid && (
+                <button
+                  onClick={() => openConfirm(u, 'delete')}
+                  className="p-1.5 rounded-lg text-txt-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                  title="Delete account"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
             </>
           ) : (
             <>
@@ -171,13 +191,22 @@ export function StaffListPage() {
                 <Edit2 className="w-4 h-4" />
               </button>
               {u.uid !== currentUser?.uid && (
-                <button
-                  onClick={() => openConfirm(u, u.status === 'active' ? 'suspended' : 'active')}
-                  className={`p-1.5 rounded-lg transition-colors ${u.status === 'active' ? 'text-txt-muted hover:text-danger hover:bg-danger/10' : 'text-txt-muted hover:text-success hover:bg-success/10'}`}
-                  title={u.status === 'active' ? 'Suspend' : 'Activate'}
-                >
-                  {u.status === 'active' ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
-                </button>
+                <>
+                  <button
+                    onClick={() => openConfirm(u, u.status === 'active' ? 'suspended' : 'active')}
+                    className={`p-1.5 rounded-lg transition-colors ${u.status === 'active' ? 'text-txt-muted hover:text-danger hover:bg-danger/10' : 'text-txt-muted hover:text-success hover:bg-success/10'}`}
+                    title={u.status === 'active' ? 'Suspend' : 'Activate'}
+                  >
+                    {u.status === 'active' ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                  </button>
+                  <button
+                    onClick={() => openConfirm(u, 'delete')}
+                    className="p-1.5 rounded-lg text-txt-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                    title="Delete account"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </>
               )}
             </>
           )}
