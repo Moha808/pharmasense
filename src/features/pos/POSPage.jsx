@@ -115,12 +115,26 @@ export function POSPage() {
       return;
     }
 
-    if (newQty > item.totalAvailable) {
-      toast.error(`Maximum available inventory reached (${item.totalAvailable} units).`);
+    // Re-validate against live batch data (accounts for batches that expired while in cart)
+    const liveStatus = getMedicineBatchStatus(medicineId, batches);
+    if (liveStatus.allBatchesExpired) {
+      toast.error(`All batches for "${item.medicineName}" have EXPIRED. This item can no longer be dispensed.`);
+      handleRemoveItem(medicineId);
       return;
     }
 
-    setCart(cart.map(it => it.medicineId === medicineId ? { ...it, quantity: newQty } : it));
+    if (newQty > liveStatus.totalValidStock) {
+      const expiredNote = liveStatus.hasExpiredBatches
+        ? ` (${liveStatus.totalExpiredStock} expired units quarantined)`
+        : '';
+      toast.error(`Maximum non-expired inventory reached: ${liveStatus.totalValidStock} units available${expiredNote}.`);
+      return;
+    }
+
+    setCart(cart.map(it => it.medicineId === medicineId
+      ? { ...it, quantity: newQty, totalAvailable: liveStatus.totalValidStock }
+      : it
+    ));
   };
 
   const handleRemoveItem = (medicineId) => {
@@ -142,6 +156,30 @@ export function POSPage() {
   const handleConfirmPayment = async ({ paymentMethod, amountPaid }) => {
     setIsProcessing(true);
     try {
+      // Re-validate every cart item against live batch data before processing
+      for (const item of cart) {
+        const liveStatus = getMedicineBatchStatus(item.medicineId, batches);
+        if (liveStatus.allBatchesExpired) {
+          toast.error(
+            `Sale blocked: All batches for "${item.medicineName}" have EXPIRED. Remove it from the cart before proceeding.`,
+            { duration: 6000 }
+          );
+          setIsProcessing(false);
+          return;
+        }
+        if (liveStatus.totalValidStock < item.quantity) {
+          const expiredNote = liveStatus.hasExpiredBatches
+            ? ` (${liveStatus.totalExpiredStock} expired units quarantined)`
+            : '';
+          toast.error(
+            `Insufficient non-expired stock for "${item.medicineName}". Only ${liveStatus.totalValidStock} valid units available${expiredNote}. Requested: ${item.quantity}.`,
+            { duration: 6000 }
+          );
+          setIsProcessing(false);
+          return;
+        }
+      }
+
       const completedSale = await posService.processSale({
         cartItems: cart,
         paymentMethod,

@@ -10,26 +10,63 @@
  */
 
 /**
+ * Normalises any date-like value into a JS Date.
+ * Handles: ISO strings, YYYY-MM-DD, JS Date, epoch numbers,
+ * and Firestore Timestamp objects ({ seconds, nanoseconds } or toDate()).
+ * Returns null if the value cannot be parsed.
+ */
+function toDate(val) {
+  if (!val) return null;
+
+  // Already a Date
+  if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
+
+  // Firestore Timestamp object — has .toDate() or { seconds }
+  if (typeof val === 'object' && typeof val.toDate === 'function') {
+    try { return val.toDate(); } catch { return null; }
+  }
+  if (typeof val === 'object' && typeof val.seconds === 'number') {
+    return new Date(val.seconds * 1000);
+  }
+
+  // Numeric epoch (ms)
+  if (typeof val === 'number') {
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  // String
+  if (typeof val === 'string') {
+    // YYYY-MM-DD → end of that day (23:59:59.999 local time)
+    if (val.length <= 10) {
+      const endOfDay = new Date(`${val}T23:59:59.999`);
+      if (!isNaN(endOfDay.getTime())) return endOfDay;
+    }
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  return null;
+}
+
+/**
  * Checks if a batch expiry date has passed.
- * Supports ISO strings, YYYY-MM-DD format, and timestamp values.
- * @param {string|Date|number} expiryDateVal 
+ * Supports ISO strings, YYYY-MM-DD format, Firestore Timestamps, and epoch numbers.
+ * SAFETY: if the expiry date is missing or unparseable the batch is treated as EXPIRED
+ * (fail-safe — never dispense when expiry status is unknown).
+ * @param {string|Date|number|object} expiryDateVal 
  * @returns {boolean} true if expired, false if valid
  */
 export function isBatchExpired(expiryDateVal) {
-  if (!expiryDateVal) return false;
-  const now = new Date();
-  
-  if (typeof expiryDateVal === 'string' && expiryDateVal.length <= 10) {
-    // Treat YYYY-MM-DD as expiring at the end of that day (23:59:59.999 local time)
-    const endOfDay = new Date(`${expiryDateVal}T23:59:59.999`);
-    if (!isNaN(endOfDay.getTime())) {
-      return endOfDay.getTime() < now.getTime();
-    }
-  }
+  // Fail-safe: missing or empty → treat as expired (block dispensing)
+  if (!expiryDateVal) return true;
 
-  const expDate = new Date(expiryDateVal);
-  if (isNaN(expDate.getTime())) return false;
-  return expDate.getTime() < now.getTime();
+  const expDate = toDate(expiryDateVal);
+
+  // Fail-safe: unparseable → treat as expired (block dispensing)
+  if (!expDate) return true;
+
+  return expDate.getTime() < Date.now();
 }
 
 /**
@@ -47,7 +84,7 @@ export function getFefoBatchesForMedicine(medicineId, allBatches = []) {
       Number(batch.quantityRemaining) > 0 &&
       !isBatchExpired(batch.expiryDate)
     )
-    .sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
+    .sort((a, b) => (toDate(a.expiryDate)?.getTime() || 0) - (toDate(b.expiryDate)?.getTime() || 0));
 }
 
 /**

@@ -54,9 +54,12 @@ export function formatRelativeTime(dateVal) {
   }
 }
 
-export function getDaysUntilExpiry(expiryDateStr) {
-  if (!expiryDateStr) return 9999;
-  const expiry = new Date(expiryDateStr);
+export function getDaysUntilExpiry(expiryDateVal) {
+  if (!expiryDateVal) return 9999;
+  const isoStr = getIsoDateString(expiryDateVal);
+  if (!isoStr) return 9999;
+  const expiry = new Date(isoStr);
+  if (isNaN(expiry.getTime())) return 9999;
   const now = new Date();
   const diffTime = expiry.getTime() - now.getTime();
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
